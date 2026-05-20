@@ -17,6 +17,7 @@ abstract class Routes {
   static const LOGIN = _Paths.LOGIN;
   static const REGISTER = _Paths.REGISTER;
   static const QUESIONER = _Paths.QUESIONER;
+  static const CAMLATIHAN = _Paths.CAMLATIHAN;
 }
 
 abstract class _Paths {
@@ -35,4 +36,5 @@ abstract class _Paths {
   static const LOGIN = '/login';
   static const REGISTER = '/register';
   static const QUESIONER = '/quesioner';
+  static const CAMLATIHAN = '/camlatihan';
 }

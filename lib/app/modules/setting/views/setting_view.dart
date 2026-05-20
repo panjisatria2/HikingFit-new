@@ -305,7 +305,7 @@ class _AccountCard extends GetView<SettingController> {
         return Column(
           children: [
             ListTile(
-              onTap: () => isAuth ? Get.toNamed('/ubahprofil') : controller.showGuestWarning(),
+              onTap: () => isAuth ? Get.toNamed('/ubahprofile') : controller.showGuestWarning(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: Container(
                 padding: const EdgeInsets.all(8),
@@ -322,7 +322,7 @@ class _AccountCard extends GetView<SettingController> {
             ),
             const Divider(height: 1, indent: 70),
             ListTile(
-              onTap: () => isAuth ? Get.toNamed('/ubahpass') : controller.showGuestWarning(),
+              onTap: () => isAuth ? Get.toNamed('/ubahpassword') : controller.showGuestWarning(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: Container(
                 padding: const EdgeInsets.all(8),

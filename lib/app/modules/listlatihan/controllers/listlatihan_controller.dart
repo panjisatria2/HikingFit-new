@@ -1,23 +1,38 @@
+import 'dart:ui';
+
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class ListlatihanController extends GetxController {
-  //TODO: Implement ListlatihanController
+  final RxBool isLoggedIn = false.obs;
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
-  final count = 0.obs;
   @override
   void onInit() {
     super.onInit();
+    checkLoginStatus();
   }
 
-  @override
-  void onReady() {
-    super.onReady();
+  Future<void> checkLoginStatus() async {
+    final token = await secureStorage.read(key: 'jwt_token');
+    isLoggedIn.value = token != null && token.isNotEmpty;
   }
 
-  @override
-  void onClose() {
-    super.onClose();
+  void showGuestWarning() {
+    Get.defaultDialog(
+      title: "Fitur Terkunci",
+      titleStyle: const TextStyle(fontWeight: FontWeight.bold),
+      middleText: "Silakan Login atau Register untuk mengakses program gerakan latihan fisik.",
+      textConfirm: "Login Sekarang",
+      textCancel: "Batal",
+      confirmTextColor: Colors.white,
+      cancelTextColor: const Color(0xFF2E6930),
+      buttonColor: const Color(0xFF2E6930),
+      onConfirm: () {
+        Get.back();
+        Get.toNamed('/login');
+      },
+    );
   }
-
-  void increment() => count.value++;
 }

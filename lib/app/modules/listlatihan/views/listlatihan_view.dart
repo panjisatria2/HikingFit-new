@@ -15,19 +15,26 @@ class ListlatihanView extends GetView<ListlatihanController> {
           SafeArea(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  SizedBox(height: 20),
-                  _HeaderSection(),
-                  SizedBox(height: 24),
-                  _CategoriesSection(),
-                  SizedBox(height: 32),
-                  _SubtitleSection(),
-                  SizedBox(height: 16),
-                  _ExerciseListSection(),
-                ],
-              ),
+              child: Obx(() {
+                // Memantau status login secara reaktif
+                final bool isAuth = controller.isLoggedIn.value;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    const _HeaderSection(),
+                    const SizedBox(height: 24),
+                    const _CategoriesSection(),
+                    const SizedBox(height: 32),
+
+                    // Passing isAuth ke title dan list kartu
+                    _SubtitleSection(isAuth: isAuth),
+                    const SizedBox(height: 16),
+                    _ExerciseListSection(isAuth: isAuth),
+                  ],
+                );
+              }),
             ),
           ),
         ],
@@ -37,7 +44,7 @@ class ListlatihanView extends GetView<ListlatihanController> {
 }
 
 // =========================================================
-// OPTIMIZED SUB-WIDGETS (STATELESS CLASS CONVERTED)
+// OPTIMIZED SUB-WIDGETS
 // =========================================================
 
 class _BlurEffect extends StatelessWidget {
@@ -150,7 +157,8 @@ class _CategoryChip extends StatelessWidget {
 }
 
 class _SubtitleSection extends StatelessWidget {
-  const _SubtitleSection();
+  final bool isAuth;
+  const _SubtitleSection({required this.isAuth});
 
   @override
   Widget build(BuildContext context) {
@@ -164,8 +172,12 @@ class _SubtitleSection extends StatelessWidget {
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87),
           ),
           Text(
-            '5 Latihan',
-            style: TextStyle(fontSize: 14, color: Colors.green.shade600, fontWeight: FontWeight.w600),
+            isAuth ? '5 Latihan' : '🔒 Locked',
+            style: TextStyle(
+                fontSize: 14,
+                color: isAuth ? Colors.green.shade600 : Colors.redAccent,
+                fontWeight: FontWeight.w600
+            ),
           ),
         ],
       ),
@@ -174,14 +186,15 @@ class _SubtitleSection extends StatelessWidget {
 }
 
 class _ExerciseListSection extends StatelessWidget {
-  const _ExerciseListSection();
+  final bool isAuth;
+  const _ExerciseListSection({required this.isAuth});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Column(
-        children: const [
+        children: [
           _ExerciseCard(
             title: 'Squats',
             subtitle: 'Lower body strength & balance',
@@ -190,6 +203,7 @@ class _ExerciseListSection extends StatelessWidget {
             duration: '10 mins',
             kcal: '45 kcal',
             isBeginner: true,
+            isLocked: !isAuth, // Jika belum auth, kunci otomatis
           ),
           _ExerciseCard(
             title: 'Lunges',
@@ -199,6 +213,7 @@ class _ExerciseListSection extends StatelessWidget {
             duration: '12 mins',
             kcal: '52 kcal',
             isBeginner: true,
+            isLocked: !isAuth,
           ),
           _ExerciseCard(
             title: 'Step-Up',
@@ -208,6 +223,7 @@ class _ExerciseListSection extends StatelessWidget {
             duration: '15 mins',
             kcal: '68 kcal',
             isBeginner: false,
+            isLocked: !isAuth,
           ),
           _ExerciseCard(
             title: 'Calf Raises',
@@ -217,6 +233,7 @@ class _ExerciseListSection extends StatelessWidget {
             duration: '8 mins',
             kcal: '30 kcal',
             isBeginner: true,
+            isLocked: !isAuth,
           ),
           _ExerciseCard(
             title: 'Plank',
@@ -225,16 +242,17 @@ class _ExerciseListSection extends StatelessWidget {
             level: 'Intermediate',
             duration: '5 mins',
             kcal: '70 kcal',
-            isBeginner: false, // Diperbaiki dari kodenya abang sebelumnya biar dapet warna orange
+            isBeginner: false,
+            isLocked: !isAuth,
           ),
-          SizedBox(height: 100), // Ruang napas ekstra di paling bawah
+          const SizedBox(height: 100),
         ],
       ),
     );
   }
 }
 
-class _ExerciseCard extends StatelessWidget {
+class _ExerciseCard extends GetView<ListlatihanController> {
   final String title;
   final String subtitle;
   final String imagePath;
@@ -242,6 +260,7 @@ class _ExerciseCard extends StatelessWidget {
   final String duration;
   final String kcal;
   final bool isBeginner;
+  final bool isLocked; // Properti baru pengontrol status gembok
 
   const _ExerciseCard({
     required this.title,
@@ -251,12 +270,19 @@ class _ExerciseCard extends StatelessWidget {
     required this.duration,
     required this.kcal,
     required this.isBeginner,
+    required this.isLocked,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => Get.toNamed('/latihan'),
+      onTap: () {
+        if (isLocked) {
+          controller.showGuestWarning(); // Panggil pop-up jika terkunci
+          return;
+        }
+        Get.toNamed('/camlatihan');
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(12),
@@ -288,6 +314,9 @@ class _ExerciseCard extends StatelessWidget {
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
+                  // Menggelapkan gambar jika terkunci (Teaser Mode)
+                  color: isLocked ? Colors.black.withOpacity(0.4) : null,
+                  colorBlendMode: isLocked ? BlendMode.darken : null,
                   errorBuilder: (context, error, stackTrace) {
                     return const Icon(Icons.image_not_supported, color: Colors.grey);
                   },
@@ -302,7 +331,11 @@ class _ExerciseCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isLocked ? Colors.black45 : Colors.black87
+                    ),
                   ),
                   const SizedBox(height: 4),
                   Text(
@@ -317,7 +350,9 @@ class _ExerciseCard extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: isBeginner ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0),
+                          color: isLocked
+                              ? Colors.grey.shade100
+                              : (isBeginner ? const Color(0xFFE8F5E9) : const Color(0xFFFFF3E0)),
                           borderRadius: BorderRadius.circular(6),
                         ),
                         child: Text(
@@ -325,7 +360,9 @@ class _ExerciseCard extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
-                            color: isBeginner ? const Color(0xFF2E6930) : Colors.orange.shade700,
+                            color: isLocked
+                                ? Colors.grey
+                                : (isBeginner ? const Color(0xFF2E6930) : Colors.orange.shade700),
                           ),
                         ),
                       ),
@@ -333,20 +370,23 @@ class _ExerciseCard extends StatelessWidget {
                       Icon(Icons.access_time, size: 12, color: Colors.grey.shade400),
                       const SizedBox(width: 4),
                       Text(duration, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
-                      const SizedBox(width: 8),
-                      Icon(Icons.local_fire_department_rounded, size: 12, color: Colors.orange.shade300),
-                      const SizedBox(width: 4),
-                      Text(kcal, style: TextStyle(fontSize: 11, color: Colors.grey.shade500)),
                     ],
                   ),
                 ],
               ),
             ),
-            // Tombol Play
+            // Tombol Aksi: Berubah jadi gembok abu-abu jika terkunci
             Container(
               padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(color: const Color(0xFFE8F5E9), shape: BoxShape.circle),
-              child: const Icon(Icons.play_arrow_rounded, color: Color(0xFF2E6930), size: 24),
+              decoration: BoxDecoration(
+                  color: isLocked ? Colors.grey.shade100 : const Color(0xFFE8F5E9),
+                  shape: BoxShape.circle
+              ),
+              child: Icon(
+                  isLocked ? Icons.lock_rounded : Icons.play_arrow_rounded,
+                  color: isLocked ? Colors.grey.shade500 : const Color(0xFF2E6930),
+                  size: 24
+              ),
             ),
           ],
         ),

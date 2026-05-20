@@ -226,7 +226,7 @@ class _FitnessCheckButton extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(30),
-          onTap: () => Get.toNamed('/cek-kebugaran'),
+          onTap: () => Get.toNamed('/cekkebugaran'),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -255,41 +255,41 @@ class _QuickAccessSection extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: [
-            _AccessCard(
-                title: 'Mulai\nTraining',
-                subtitle: isAuth ? 'Begin now' : 'Locked', // Berubah jika belum login
-                icon: isAuth ? Icons.fitness_center_rounded : Icons.lock_rounded, // Ikon gembok
-                imagePath: 'assets/training/training.png',
-                isLocked: !isAuth, // Kirim status kunci ke UI kartu
-                onTap: () {
-                  if (!isAuth) {
-                    // POP-UP PERINGATAN KETIKA GUEST KLIK LATIHAN
-                    Get.defaultDialog(
-                        title: "Fitur Terkunci",
-                        titleStyle: const TextStyle(fontWeight: FontWeight.bold),
-                        middleText: "Silakan Login atau Register untuk memulai program Training.",
-                        textConfirm: "Login Sekarang",
-                        textCancel: "Batal",
-                        confirmTextColor: Colors.white,
-                        cancelTextColor: const Color(0xFF2E6930),
-                        buttonColor: const Color(0xFF2E6930),
-                        onConfirm: () {
-                          Get.back();
-                          Get.toNamed('/login');
-                        }
-                    );
-                    return;
-                  }
-
-                  // Jika sudah login, lanjut ke halaman Latihan
-                  if (Get.isRegistered<dynamic>(tag: 'MainController')) {
-                    Get.find<dynamic>(tag: 'MainController').changePage(1);
-                  } else {
-                    Get.offAllNamed('/main', arguments: 1);
-                  }
-                }
-            ),
-            const SizedBox(width: 16),
+            // _AccessCard(
+            //     title: 'Mulai\nTraining',
+            //     subtitle: isAuth ? 'Begin now' : 'Locked', // Berubah jika belum login
+            //     icon: isAuth ? Icons.fitness_center_rounded : Icons.lock_rounded, // Ikon gembok
+            //     imagePath: 'assets/training/training.png',
+            //     isLocked: !isAuth, // Kirim status kunci ke UI kartu
+            //     onTap: () {
+            //       if (!isAuth) {
+            //         // POP-UP PERINGATAN KETIKA GUEST KLIK LATIHAN
+            //         Get.defaultDialog(
+            //             title: "Fitur Terkunci",
+            //             titleStyle: const TextStyle(fontWeight: FontWeight.bold),
+            //             middleText: "Silakan Login atau Register untuk memulai program Training.",
+            //             textConfirm: "Login Sekarang",
+            //             textCancel: "Batal",
+            //             confirmTextColor: Colors.white,
+            //             cancelTextColor: const Color(0xFF2E6930),
+            //             buttonColor: const Color(0xFF2E6930),
+            //             onConfirm: () {
+            //               Get.back();
+            //               Get.toNamed('/login');
+            //             }
+            //         );
+            //         return;
+            //       }
+            //
+            //       // Jika sudah login, lanjut ke halaman Latihan
+            //       if (Get.isRegistered<dynamic>(tag: 'MainController')) {
+            //         Get.find<dynamic>(tag: 'MainController').changePage(1);
+            //       } else {
+            //         Get.offAllNamed('/main', arguments: 1);
+            //       }
+            //     }
+            // ),
+            // const SizedBox(width: 16),
             _AccessCard(
                 title: 'Plan Mountain\nTrip',
                 subtitle: 'Explore',

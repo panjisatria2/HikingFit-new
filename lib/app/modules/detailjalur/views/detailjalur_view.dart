@@ -426,7 +426,7 @@ class _BottomActionButtons extends StatelessWidget {
           children: [
             Expanded(
               child: OutlinedButton.icon(
-                onPressed: () => Get.toNamed('/main', arguments: 1), // Mengarahkan ke rute folder training (/main index 1)
+                onPressed: () => Get.toNamed('/main', arguments: 1),
                 icon: const Icon(Icons.directions_walk_rounded, size: 18),
                 label: const Text("Start Training", style: TextStyle(fontWeight: FontWeight.bold)),
                 style: OutlinedButton.styleFrom(

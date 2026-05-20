@@ -1,5 +1,7 @@
 import 'package:get/get.dart';
 
+import '../modules/camlatihan/bindings/camlatihan_binding.dart';
+import '../modules/camlatihan/views/camlatihan_view.dart';
 import '../modules/cekkebugaran/bindings/cekkebugaran_binding.dart';
 import '../modules/cekkebugaran/views/cekkebugaran_view.dart';
 import '../modules/detailgunung/bindings/detailgunung_binding.dart';
@@ -106,6 +108,11 @@ class AppPages {
       name: _Paths.QUESIONER,
       page: () => const QuesionerView(),
       binding: QuesionerBinding(),
+    ),
+    GetPage(
+      name: _Paths.CAMLATIHAN,
+      page: () => const CamlatihanView(),
+      binding: CamlatihanBinding(),
     ),
   ];
 }
