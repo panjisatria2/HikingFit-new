@@ -15,7 +15,7 @@ class LoginView extends GetView<LoginController> {
         physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            // --- 1. SEKSI HEADER ---
+            // --- 1. SEKSI HEADER --
             SizedBox(
               height: headerHeight,
               child: Stack(
@@ -57,7 +57,10 @@ class LoginView extends GetView<LoginController> {
                   color: Colors.white,
                   borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 28.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 28.0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -139,7 +142,7 @@ class _LogoAndTitleSection extends StatelessWidget {
                   color: Colors.black.withOpacity(0.08),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
-                )
+                ),
               ],
             ),
             padding: const EdgeInsets.all(10),
@@ -147,8 +150,11 @@ class _LogoAndTitleSection extends StatelessWidget {
               'assets/gambar/logo.png',
               fit: BoxFit.contain,
               cacheWidth: 120,
-              errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.terrain_rounded, color: Color(0xFF2E6930), size: 36),
+              errorBuilder: (context, error, stackTrace) => const Icon(
+                Icons.terrain_rounded,
+                color: Color(0xFF2E6930),
+                size: 36,
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -202,16 +208,27 @@ class _CustomLoginInputField extends StatelessWidget {
         fillColor: const Color(0xFFF9FBFA),
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
-        prefixIcon: Icon(icon, color: const Color(0xFF2E6930).withOpacity(0.4), size: 20),
+        prefixIcon: Icon(
+          icon,
+          color: const Color(0xFF2E6930).withOpacity(0.4),
+          size: 20,
+        ),
         suffixIcon: isPassword
             ? IconButton(
-          icon: Icon(Icons.visibility_off_outlined, color: Colors.grey.shade400, size: 20),
-          onPressed: () {
-            // TODO: Toggle visibility password
-          },
-        )
+                icon: Icon(
+                  Icons.visibility_off_outlined,
+                  color: Colors.grey.shade400,
+                  size: 20,
+                ),
+                onPressed: () {
+                  // TODO: Toggle visibility password
+                },
+              )
             : null,
-        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 14,
+          horizontal: 16,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide.none,
@@ -237,31 +254,44 @@ class _LoginButtonAction extends GetView<LoginController> {
     return SizedBox(
       width: double.infinity,
       height: 52,
-      child: Obx(() => ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2E6930),
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-          elevation: 0,
+      child: Obx(
+        () => ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF2E6930),
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+            ),
+            elevation: 0,
+          ),
+          onPressed: controller.isLoading.value
+              ? null
+              : () => controller.loginUser(),
+          child: controller.isLoading.value
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 3,
+                  ),
+                )
+              : const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Login',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 6),
+                    Icon(Icons.arrow_forward_rounded, size: 18),
+                  ],
+                ),
         ),
-        onPressed: controller.isLoading.value
-            ? null
-            : () => controller.loginUser(),
-        child: controller.isLoading.value
-            ? const SizedBox(
-          height: 20,
-          width: 20,
-          child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-        )
-            : const Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('Login', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-            SizedBox(width: 6),
-            Icon(Icons.arrow_forward_rounded, size: 18),
-          ],
-        ),
-      )),
+      ),
     );
   }
 }
@@ -278,7 +308,11 @@ class _DividerSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'OR CONTINUE WITH',
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 11, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.grey.shade400,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
         Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
@@ -299,7 +333,9 @@ class _GoogleButtonAction extends StatelessWidget {
         style: OutlinedButton.styleFrom(
           backgroundColor: Colors.white,
           side: const BorderSide(color: Color(0xFFEFEFEF)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
         ),
         onPressed: () {},
         child: Row(
@@ -309,12 +345,17 @@ class _GoogleButtonAction extends StatelessWidget {
               'assets/gambar/Google.png',
               width: 22,
               cacheWidth: 50,
-              errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.red),
+              errorBuilder: (c, e, s) =>
+                  const Icon(Icons.g_mobiledata, color: Colors.red),
             ),
             const SizedBox(width: 12),
             const Text(
               'Google',
-              style: TextStyle(color: Color(0xFF1A1D1A), fontSize: 15, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: Color(0xFF1A1D1A),
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ),
