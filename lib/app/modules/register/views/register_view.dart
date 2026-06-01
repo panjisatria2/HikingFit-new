@@ -81,7 +81,7 @@ class RegisterView extends GetView<RegisterController> {
                     _CustomRegisterInputField(
                       hint: 'Full Name',
                       icon: Icons.person_outline_rounded,
-                      textController: controller.nameController,
+                      textController: controller.fullNameController,
                     ),
                     const SizedBox(height: 16),
                     _CustomRegisterInputField(

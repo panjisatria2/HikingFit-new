@@ -18,6 +18,8 @@ import '../modules/login/bindings/login_binding.dart';
 import '../modules/login/views/login_view.dart';
 import '../modules/main/bindings/main_binding.dart';
 import '../modules/main/views/main_view.dart';
+import '../modules/otp/bindings/otp_binding.dart';
+import '../modules/otp/views/otp_view.dart';
 import '../modules/progres/bindings/progres_binding.dart';
 import '../modules/progres/views/progres_view.dart';
 import '../modules/quesioner/bindings/quesioner_binding.dart';
@@ -113,6 +115,11 @@ class AppPages {
       name: _Paths.CAMLATIHAN,
       page: () => const CamlatihanView(),
       binding: CamlatihanBinding(),
+    ),
+    GetPage(
+      name: _Paths.OTP,
+      page: () => const OtpView(),
+      binding: OtpBinding(),
     ),
   ];
 }

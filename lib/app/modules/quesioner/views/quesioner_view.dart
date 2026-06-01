@@ -134,7 +134,7 @@ class _HeightCardSection extends GetView<QuesionerController> {
                 decoration: BoxDecoration(color: const Color(0xFFE8F5E9), borderRadius: BorderRadius.circular(12)),
                 child: Obx(() => RichText(
                   text: TextSpan(
-                    text: '${controller.heightValue.value}',
+                    text: '${controller.heightController.value}',
                     style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E6930)),
                     children: const [TextSpan(text: ' cm', style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF2E6930)))],
                   ),
@@ -152,10 +152,10 @@ class _HeightCardSection extends GetView<QuesionerController> {
               overlayColor: const Color(0xFF2E6930).withOpacity(0.2),
             ),
             child: Slider(
-              value: controller.heightValue.value.toDouble(),
+              value: controller.heightController.value.toDouble(),
               min: 140,
               max: 220,
-              onChanged: (value) => controller.heightValue.value = value.round(),
+              onChanged: (value) => controller.heightController.value = value.round(),
             ),
           )),
           Padding(

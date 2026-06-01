@@ -108,52 +108,33 @@ class _ProfileCardSection extends GetView<SettingController> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))]),
       child: Obx(() {
         final bool isAuth = controller.isLoggedIn.value;
-
         return Row(
           children: [
-            // --- AVATAR DENGAN INISIAL HURUF (SAMA DENGAN HOME) ---
             Stack(
               children: [
                 Container(
                   width: 65, height: 65,
-                  decoration: BoxDecoration(
-                      color: const Color(0xFFE8F1E8), // Hijau pudar elegan
-                      borderRadius: BorderRadius.circular(20)
-                  ),
-                  child: Center(
-                    // Mengambil huruf pertama dari nama user secara dinamis
+                  decoration: BoxDecoration(color: const Color(0xFFE8F1E8), borderRadius: BorderRadius.circular(20)),
+                  // --- TAMPILKAN FOTO DI SINI ---
+                  child: controller.profileImageUrl.value.isNotEmpty
+                      ? ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Image.network(controller.profileImageUrl.value, fit: BoxFit.cover),
+                  )
+                      : Center(
                     child: Text(
-                      controller.fullName.value.isNotEmpty
-                          ? controller.fullName.value[0].toUpperCase()
-                          : 'G',
-                      style: const TextStyle(
-                          fontSize: 28, // Ukuran huruf lebih besar
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF4A7C59)
-                      ),
+                      controller.fullName.value.isNotEmpty ? controller.fullName.value[0].toUpperCase() : 'G',
+                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF4A7C59)),
                     ),
                   ),
                 ),
-                // Titik status Online (Hanya tampil jika sudah login)
                 if (isAuth)
                   Positioned(
                     bottom: -2, right: -2,
-                    child: Container(
-                      padding: const EdgeInsets.all(3), // Padding sedikit lebih besar
-                      decoration: BoxDecoration(
-                          color: const Color(0xFF2E5B2C), // Hijau tua status
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2.5) // Border putih
-                      ),
-                      child: const Icon(Icons.check_rounded, color: Colors.white, size: 10),
-                    ),
+                    child: Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: const Color(0xFF2E5B2C), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)), child: const Icon(Icons.check_rounded, color: Colors.white, size: 10)),
                   ),
               ],
             ),
@@ -162,40 +143,19 @@ class _ProfileCardSection extends GetView<SettingController> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    controller.fullName.value,
-                    style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1D1A)),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis, // Antisipasi nama terlalu panjang
-                  ),
+                  Text(controller.fullName.value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF1A1D1A)), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
-                  Text(
-                    isAuth ? 'Status BMI: ${controller.bmiStatus.value}' : 'Status: Guest Mode 🌿',
-                    style: const TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500),
-                  ),
+                  Text(isAuth ? 'Status BMI: ${controller.bmiStatus.value}' : 'Status: Guest Mode 🌿', style: const TextStyle(fontSize: 12, color: Colors.black45, fontWeight: FontWeight.w500)),
                 ],
               ),
             ),
+            // ... (Tombol login register guest biarkan sama)
             if (!isAuth)
               Row(
                 children: [
-                  GestureDetector(
-                    onTap: () => Get.toNamed('/login'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(color: const Color(0xFF4A7C59), borderRadius: BorderRadius.circular(12)),
-                      child: const Text('Login', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)),
-                    ),
-                  ),
+                  GestureDetector(onTap: () => Get.toNamed('/login'), child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), decoration: BoxDecoration(color: const Color(0xFF4A7C59), borderRadius: BorderRadius.circular(12)), child: const Text('Login', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11)))),
                   const SizedBox(width: 6),
-                  GestureDetector(
-                    onTap: () => Get.toNamed('/register'),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                      decoration: BoxDecoration(color: const Color(0xFFE8F1E8), borderRadius: BorderRadius.circular(12)),
-                      child: const Text('Register', style: TextStyle(color: Color(0xFF4A7C59), fontWeight: FontWeight.bold, fontSize: 11)),
-                    ),
-                  ),
+                  GestureDetector(onTap: () => Get.toNamed('/register'), child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8), decoration: BoxDecoration(color: const Color(0xFFE8F1E8), borderRadius: BorderRadius.circular(12)), child: const Text('Register', style: TextStyle(color: Color(0xFF4A7C59), fontWeight: FontWeight.bold, fontSize: 11)))),
                 ],
               ),
           ],
@@ -294,48 +254,33 @@ class _AccountCard extends GetView<SettingController> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))]),
       child: Obx(() {
         final bool isAuth = controller.isLoggedIn.value;
-
         return Column(
           children: [
             ListTile(
-              onTap: () => isAuth ? Get.toNamed('/ubahprofile') : controller.showGuestWarning(),
+              onTap: () => isAuth ? Get.toNamed('/ubahprofile', arguments: {
+                'fullName': controller.fullName.value,
+                'email': controller.email.value,
+                'height': controller.height.value,
+                'weight': controller.weight.value,
+                'profileImageUrl': controller.profileImageUrl.value, // <-- KIRIM FOTO KE HALAMAN UBAH PROFIL
+              }) : controller.showGuestWarning(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: const Color(0xFFEDF2FF), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.person_outline_rounded, color: Colors.blueAccent),
-              ),
+              leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFFEDF2FF), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.person_outline_rounded, color: Colors.blueAccent)),
               title: const Text('Ubah Profile', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               subtitle: const Text('Security settings', style: TextStyle(fontSize: 12)),
-              trailing: Icon(
-                  isAuth ? Icons.arrow_forward_ios_rounded : Icons.lock_outline_rounded,
-                  size: 14,
-                  color: Colors.grey
-              ),
+              trailing: Icon(isAuth ? Icons.arrow_forward_ios_rounded : Icons.lock_outline_rounded, size: 14, color: Colors.grey),
             ),
             const Divider(height: 1, indent: 70),
             ListTile(
               onTap: () => isAuth ? Get.toNamed('/ubahpassword') : controller.showGuestWarning(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              leading: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: const Color(0xFFEDF2FF), borderRadius: BorderRadius.circular(12)),
-                child: const Icon(Icons.lock_outline_rounded, color: Colors.blueAccent),
-              ),
+              leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFFEDF2FF), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.lock_outline_rounded, color: Colors.blueAccent)),
               title: const Text('Ubah Password', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
               subtitle: const Text('Security settings', style: TextStyle(fontSize: 12)),
-              trailing: Icon(
-                  isAuth ? Icons.arrow_forward_ios_rounded : Icons.lock_outline_rounded,
-                  size: 14,
-                  color: Colors.grey
-              ),
+              trailing: Icon(isAuth ? Icons.arrow_forward_ios_rounded : Icons.lock_outline_rounded, size: 14, color: Colors.grey),
             ),
           ],
         );
@@ -357,17 +302,13 @@ class _SignOutCard extends GetView<SettingController> {
           backgroundColor: Colors.white,
           foregroundColor: Colors.redAccent,
           side: const BorderSide(color: Colors.redAccent, width: 1.5),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           elevation: 0,
         ),
         onPressed: () {
           Get.dialog(
             Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
               backgroundColor: Colors.white,
               elevation: 10,
               child: Padding(
@@ -375,71 +316,37 @@ class _SignOutCard extends GetView<SettingController> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // --- IKON HEADER ---
                     Container(
                       padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.red.shade50,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.logout_rounded,
-                        color: Colors.redAccent,
-                        size: 32,
-                      ),
+                      decoration: BoxDecoration(color: Colors.red.shade50, shape: BoxShape.circle),
+                      child: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 32),
                     ),
                     const SizedBox(height: 20),
-
-                    // --- JUDUL ---
                     const Text(
                       "Logout Account",
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Color(0xFF1A1D1A),
-                      ),
+                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF1A1D1A)),
                     ),
                     const SizedBox(height: 12),
-
-                    // --- DESKRIPSI ---
                     const Text(
                       "Are you sure you want to exit or switch to another account?",
                       textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.black54,
-                        height: 1.5,
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.black54, height: 1.5),
                     ),
                     const SizedBox(height: 32),
-
-                    // --- TOMBOL AKSI SEJAJAR ---
                     Row(
                       children: [
-                        // Tombol Batal
                         Expanded(
                           child: OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               side: const BorderSide(color: Color(0xFFEFEFEF), width: 1.5),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
                             onPressed: () => Get.back(),
-                            child: const Text(
-                              "Cancel",
-                              style: TextStyle(
-                                color: Colors.black54,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
+                            child: const Text("Cancel", style: TextStyle(color: Colors.black54, fontWeight: FontWeight.bold, fontSize: 14)),
                           ),
                         ),
-                        const SizedBox(width: 12), // Jarak antar tombol
-
-                        // Tombol Keluar
+                        const SizedBox(width: 12),
                         Expanded(
                           child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
@@ -447,21 +354,13 @@ class _SignOutCard extends GetView<SettingController> {
                               backgroundColor: Colors.redAccent,
                               foregroundColor: Colors.white,
                               elevation: 0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(14),
-                              ),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
                             onPressed: () {
-                              Get.back(); // Tutup dialog dulu
-                              controller.handleLogout(); // Eksekusi fungsi logout
+                              Get.back();
+                              controller.handleLogout();
                             },
-                            child: const Text(
-                              "Yes, Logout",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
+                            child: const Text("Yes, Logout", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                           ),
                         ),
                       ],
@@ -470,7 +369,7 @@ class _SignOutCard extends GetView<SettingController> {
                 ),
               ),
             ),
-            barrierDismissible: false, // Opsi: Mencegah user menutup dialog dengan klik area luar
+            barrierDismissible: false,
           );
         },
         child: Row(
@@ -480,12 +379,7 @@ class _SignOutCard extends GetView<SettingController> {
             SizedBox(width: 8),
             Text(
               'Logout Account',
-              style: TextStyle(
-                color: Colors.redAccent,
-                fontWeight: FontWeight.bold,
-                fontSize: 15,
-                letterSpacing: 0.5,
-              ),
+              style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold, fontSize: 15, letterSpacing: 0.5),
             ),
           ],
         ),

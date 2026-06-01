@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "19014984436",
+    "project_id": "hikingfit-93024",
+    "storage_bucket": "hikingfit-93024.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:19014984436:android:0c64410f2d270a78ecb4a1",
+        "android_client_info": {
+          "package_name": "com.hikingfit.hikingfit"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB2B8SC45sHm6yKSKEccRYR1EDTCowTehA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

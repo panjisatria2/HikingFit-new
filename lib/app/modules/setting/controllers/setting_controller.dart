@@ -1,92 +1,89 @@
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../utils/api_endpoints.dart';
 
 class SettingController extends GetxController {
+  final RxString fullName = 'Pendaki'.obs;
+  final RxString email = ''.obs;
+  final RxString profileImageUrl = ''.obs; // <-- VARIABEL BARU
+  final RxDouble bmiValue = 0.0.obs;
+  final RxString bmiStatus = 'Memuat...'.obs;
+
   final RxBool isLoggedIn = false.obs;
-  final RxString fullName = 'User Guest'.obs;
   final RxInt weight = 0.obs;
   final RxInt height = 0.obs;
-  final RxString bmiStatus = '-'.obs;
+  final RxBool isLoading = true.obs;
 
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
 
   @override
   void onInit() {
     super.onInit();
-    loadUserProfile();
+    checkLoginStatus();
   }
 
-  Future<void> loadUserProfile() async {
-    try {
-      final token = await secureStorage.read(key: 'jwt_token');
-
-      if (token != null && token.isNotEmpty) {
-        isLoggedIn.value = true;
-
-        final response = await http.get(
-          Uri.parse(ApiEndpoints.profile),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        );
-
-        if (response.statusCode == 200) {
-          final data = jsonDecode(response.body);
-          if (data['success'] == true) {
-            final profile = data['data'];
-            fullName.value = profile['fullName'] ?? 'Pendaki Fit';
-            weight.value = profile['weight'] ?? 0;
-            height.value = profile['height'] ?? 0;
-            bmiStatus.value = profile['bmiStatus'] ?? 'Belum dihitung';
-          }
-        } else if (response.statusCode == 401) {
-          await handleLogout();
-        }
-      } else {
-        isLoggedIn.value = false;
-        resetToGuest();
-      }
-    } catch (e) {
-      debugPrint('Error Loading Setting Profile: $e');
+  void checkLoginStatus() {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      isLoggedIn.value = true;
+      loadProfileData();
+    } else {
       isLoggedIn.value = false;
-      resetToGuest();
+      isLoading.value = false;
+      bmiStatus.value = 'Guest Mode';
     }
   }
 
-  void resetToGuest() {
-    fullName.value = 'User Guest';
-    weight.value = 0;
-    height.value = 0;
-    bmiStatus.value = '-';
+  Future<void> loadProfileData() async {
+    try {
+      isLoading.value = true;
+      String? token = await secureStorage.read(key: 'jwt_token');
+
+      if (token != null) {
+        final response = await http.get(Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'), headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
+
+        if (response.statusCode == 200) {
+          final jsonResponse = jsonDecode(response.body);
+          if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
+            final data = jsonResponse['data'];
+
+            fullName.value = data['fullName'] ?? 'Pendaki';
+            email.value = data['email'] ?? '';
+            profileImageUrl.value = data['profileImageUrl'] ?? ''; // <-- TANGKAP FOTO
+            bmiValue.value = (data['bmi'] ?? 0).toDouble();
+            weight.value = data['weight'] ?? 0;
+            height.value = data['height'] ?? 0;
+
+            bmiStatus.value = _calculateBmiStatus(bmiValue.value);
+          }
+        }
+      }
+    } catch (e) {
+      bmiStatus.value = 'Error jaringan';
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  // POP-UP PERINGATAN REAKTIF JIKA TAMU MENCOBA AKSES MENU INTERN
+  String _calculateBmiStatus(double bmi) {
+    if (bmi == 0) return 'Belum ada data';
+    if (bmi < 18.5) return 'Underweight (Kurus)';
+    if (bmi >= 18.5 && bmi <= 24.9) return 'Normal (Ideal)';
+    if (bmi >= 25 && bmi <= 29.9) return 'Overweight (Gemuk)';
+    return 'Obese (Obesitas)';
+  }
+
   void showGuestWarning() {
-    Get.defaultDialog(
-        title: "Fitur Terkunci",
-        titleStyle: const TextStyle(fontWeight: FontWeight.bold),
-        middleText: "Silakan Login atau Register akun terlebih dahulu untuk merubah setelan profile.",
-        textConfirm: "Login Sekarang",
-        textCancel: "Batal",
-        confirmTextColor: Colors.white,
-        cancelTextColor: const Color(0xFF4A7C59),
-        buttonColor: const Color(0xFF4A7C59),
-        onConfirm: () {
-          Get.back();
-          Get.toNamed('/login');
-        }
-    );
+    Get.snackbar('Akses Ditolak', 'Silakan login terlebih dahulu.', backgroundColor: Colors.orange, colorText: Colors.white);
   }
 
   Future<void> handleLogout() async {
-    await secureStorage.deleteAll();
-    isLoggedIn.value = false;
-    resetToGuest();
+    await FirebaseAuth.instance.signOut();
+    await secureStorage.delete(key: 'jwt_token');
     Get.offAllNamed('/login');
   }
 }

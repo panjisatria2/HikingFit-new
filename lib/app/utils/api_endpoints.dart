@@ -1,20 +1,10 @@
 class ApiEndpoints {
-  // ========================================================
-  // 1. BASE URL
-  // Ganti IP ini sesuai dengan kondisi (10.0.2.2 untuk emulator,
-  // atau IP WiFi laptop 192.168.x.x jika di-run ke HP fisik)
-  // ========================================================
-  static const String baseUrl = 'https://backend-hiking-fit.vercel.app/api';
+  static const String baseUrl = 'https://backend-hiking-fit.vercel.app';
+  static const String login = '$baseUrl/api/auth/login';
+  static const String register = '$baseUrl/api/auth/register';
+  static const String verifyOtp = '$baseUrl/api/auth/verify-otp';
+  static const String profile = '$baseUrl/api/auth/profile';
+  static const String onboarding = '$baseUrl/api/auth/onboarding';
+  static const String profileUpdate = '$baseUrl/api/auth/profile/update';
 
-  // ========================================================
-  // 2. ENDPOINTS AUTHENTICATION & PROFILE
-  // ========================================================
-  static const String login = '$baseUrl/auth/login';
-  static const String register = '$baseUrl/auth/register';
-  static const String onboarding = '$baseUrl/auth/onboarding';
-  static const String profile = '$baseUrl/auth/profile';
-
-// Nanti kalau Abang nambah fitur gunung, tinggal tambahin di sini:
-// static const String getAllGunung = '$baseUrl/gunung';
-// static const String getDetailGunung = '$baseUrl/gunung/detail';
 }

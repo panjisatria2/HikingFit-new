@@ -1,25 +1,21 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hikingfit/app/utils/api_endpoints.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
-// Gunakan Secure Storage terenkripsi agar lolos penilaian Pentest dosen
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../../../utils/api_endpoints.dart';
 
 class RegisterController extends GetxController {
-  final TextEditingController nameController = TextEditingController();
-  final TextEditingController emailController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
+  final fullNameController = TextEditingController();
+  final emailController = TextEditingController();
+  final passwordController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
   final RxBool isLoading = false.obs;
 
-  // Inisialisasi brankas penyimpanan lokal terenkripsi
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
-
   @override
   void onClose() {
-    nameController.dispose();
+    fullNameController.dispose();
     emailController.dispose();
     passwordController.dispose();
     confirmPasswordController.dispose();
@@ -27,91 +23,55 @@ class RegisterController extends GetxController {
   }
 
   Future<void> registerUser() async {
-    final String name = nameController.text.trim();
-    final String email = emailController.text.trim();
-    final String password = passwordController.text.trim();
-    final String confirmPassword = confirmPasswordController.text.trim();
-
-    if (name.isEmpty || email.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
-      Get.snackbar(
-        'Peringatan',
-        'Semua kolom wajib diisi!',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+    if (fullNameController.text.isEmpty || emailController.text.isEmpty ||
+        passwordController.text.isEmpty || confirmPasswordController.text.isEmpty) {
+      Get.snackbar('Perhatian', 'Semua kolom wajib diisi!', backgroundColor: Colors.orange, colorText: Colors.white);
       return;
     }
 
-    if (password != confirmPassword) {
-      Get.snackbar(
-        'Peringatan',
-        'Password dan Confirm Password tidak cocok!',
-        backgroundColor: Colors.orange,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+    if (passwordController.text != confirmPasswordController.text) {
+      Get.snackbar('Error', 'Password dan Konfirmasi tidak cocok!', backgroundColor: Colors.red, colorText: Colors.white);
       return;
     }
 
     try {
       isLoading.value = true;
 
-      // Mengakses URL Vercel produksi yang sudah live secara aman (HTTPS)
+      // 1. Buat akun di Firebase
+      UserCredential userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text.trim(),
+        password: passwordController.text.trim(),
+      );
+
+      // 2. Set Nama di lokal Firebase
+      await userCredential.user?.updateDisplayName(fullNameController.text.trim());
+
+      final String uid = userCredential.user!.uid;
+      final String email = emailController.text.trim();
+      final String fullName = fullNameController.text.trim();
+
+      // 3. Tembak Vercel untuk kirim OTP sekaligus simpan nama
       final response = await http.post(
-        Uri.parse(ApiEndpoints.register),
+        Uri.parse('${ApiEndpoints.baseUrl}/api/auth/send-otp'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({
-          'fullName': name,
+          'uid': uid,
           'email': email,
-          'password': password,
-          'confirmPassword': confirmPassword,
-          'device': 'mobile',
+          'fullName': fullName, // Dikirim ke Vercel
         }),
       );
 
-      final Map<String, dynamic> data = jsonDecode(response.body);
-
-      if (response.statusCode == 201 && data['success'] == true) {
-        // Ambil ID user dari respon backend Supabase
-        final String userId = data['user']['id'];
-
-        // Simpan secara aman ke hardware-level encryption (Keystore/Keychain)
-        await secureStorage.write(key: 'user_id', value: userId);
-
-        Get.snackbar(
-          'Registrasi Berhasil',
-          data['message'],
-          backgroundColor: const Color(0xFF2E6930),
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
-
-        Get.offAllNamed('/quesioner', arguments: {
-          'email': email,
-          'password': password,
-        });
-
-        // Langsung arahkan ke halaman Onboarding / Kuesioner Pertanyaan Fisik
-        Get.offAllNamed('/pertanyaan');
+      if (response.statusCode == 200) {
+        Get.snackbar('Sukses', 'OTP terkirim!', backgroundColor: const Color(0xFF4A7C59), colorText: Colors.white);
+        Get.toNamed('/otp', arguments: {'uid': uid, 'email': email});
       } else {
-        Get.snackbar(
-          'Registrasi Gagal',
-          data['message'] ?? 'Terjadi kesalahan tidak dikenal.',
-          backgroundColor: Colors.redAccent,
-          colorText: Colors.white,
-          snackPosition: SnackPosition.TOP,
-        );
+        final body = jsonDecode(response.body);
+        Get.snackbar('Gagal', body['message'] ?? 'Gagal', backgroundColor: Colors.red, colorText: Colors.white);
       }
+    } on FirebaseAuthException catch (e) {
+      Get.snackbar('Gagal Register', e.message ?? 'Error Firebase', backgroundColor: Colors.red, colorText: Colors.white);
     } catch (e) {
-      debugPrint('Error Register: $e'); // Mempermudah penelusuran log di Android Studio
-      Get.snackbar(
-        'Error Koneksi',
-        'Gagal terhubung ke server. Periksa jaringan backend.',
-        backgroundColor: Colors.redAccent,
-        colorText: Colors.white,
-        snackPosition: SnackPosition.TOP,
-      );
+      Get.snackbar('Error', e.toString(), backgroundColor: Colors.red, colorText: Colors.white);
     } finally {
       isLoading.value = false;
     }

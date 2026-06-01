@@ -79,22 +79,31 @@ class _HeaderSection extends GetView<HomeController> {
             Container(
               width: 50, height: 50,
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: const Color(0xFFE8F5E9)),
-              child: Center(
-                child: Obx(() => Text(
-                  controller.userName.value.isNotEmpty ? controller.userName.value[0].toUpperCase() : 'G',
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E6930)),
-                )),
-              ),
+              // --- LOGIKA MENAMPILKAN FOTO ---
+              child: Obx(() {
+                if (controller.profileImageUrl.value.isNotEmpty) {
+                  return ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Image.network(
+                      controller.profileImageUrl.value,
+                      fit: BoxFit.cover,
+                    ),
+                  );
+                } else {
+                  return Center(
+                    child: Text(
+                      controller.userName.value.isNotEmpty ? controller.userName.value[0].toUpperCase() : 'G',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E6930)),
+                    ),
+                  );
+                }
+              }),
             ),
             Obx(() => controller.isLoggedIn.value
                 ? Positioned(
               bottom: -2, right: -2,
-              child: Container(
-                width: 14, height: 14,
-                decoration: BoxDecoration(color: const Color(0xFF2ECC71), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
-              ),
-            )
-                : const SizedBox.shrink()),
+              child: Container(width: 14, height: 14, decoration: BoxDecoration(color: const Color(0xFF2ECC71), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2))),
+            ) : const SizedBox.shrink()),
           ],
         ),
         const SizedBox(width: 16),
@@ -106,25 +115,17 @@ class _HeaderSection extends GetView<HomeController> {
           ],
         ),
         const Spacer(),
+        // ... (Bagian lonceng notifikasi biarkan persis seperti kode Abang)
         Obx(() => controller.isLoggedIn.value
             ? Container(
-          width: 45, height: 45,
-          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              const Icon(Icons.notifications_none_rounded, color: Color(0xFF1A1D1A)),
-              Positioned(top: 12, right: 12, child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle))),
-            ],
-          ),
-        )
-            : GestureDetector(
+          width: 45, height: 45, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+          child: Stack(alignment: Alignment.center, children: [
+            const Icon(Icons.notifications_none_rounded, color: Color(0xFF1A1D1A)),
+            Positioned(top: 12, right: 12, child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle))),
+          ]),
+        ) : GestureDetector(
           onTap: () => Get.toNamed('/login'),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(color: const Color(0xFF2E6930), borderRadius: BorderRadius.circular(20)),
-            child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
-          ),
+          child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: const Color(0xFF2E6930), borderRadius: BorderRadius.circular(20)), child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
         )),
       ],
     );
@@ -255,41 +256,41 @@ class _QuickAccessSection extends StatelessWidget {
         const SizedBox(height: 16),
         Row(
           children: [
-            // _AccessCard(
-            //     title: 'Mulai\nTraining',
-            //     subtitle: isAuth ? 'Begin now' : 'Locked', // Berubah jika belum login
-            //     icon: isAuth ? Icons.fitness_center_rounded : Icons.lock_rounded, // Ikon gembok
-            //     imagePath: 'assets/training/training.png',
-            //     isLocked: !isAuth, // Kirim status kunci ke UI kartu
-            //     onTap: () {
-            //       if (!isAuth) {
-            //         // POP-UP PERINGATAN KETIKA GUEST KLIK LATIHAN
-            //         Get.defaultDialog(
-            //             title: "Fitur Terkunci",
-            //             titleStyle: const TextStyle(fontWeight: FontWeight.bold),
-            //             middleText: "Silakan Login atau Register untuk memulai program Training.",
-            //             textConfirm: "Login Sekarang",
-            //             textCancel: "Batal",
-            //             confirmTextColor: Colors.white,
-            //             cancelTextColor: const Color(0xFF2E6930),
-            //             buttonColor: const Color(0xFF2E6930),
-            //             onConfirm: () {
-            //               Get.back();
-            //               Get.toNamed('/login');
-            //             }
-            //         );
-            //         return;
-            //       }
-            //
-            //       // Jika sudah login, lanjut ke halaman Latihan
-            //       if (Get.isRegistered<dynamic>(tag: 'MainController')) {
-            //         Get.find<dynamic>(tag: 'MainController').changePage(1);
-            //       } else {
-            //         Get.offAllNamed('/main', arguments: 1);
-            //       }
-            //     }
-            // ),
-            // const SizedBox(width: 16),
+            _AccessCard(
+                title: 'Mulai\nTraining',
+                subtitle: isAuth ? 'Begin now' : 'Locked', // Berubah jika belum login
+                icon: isAuth ? Icons.fitness_center_rounded : Icons.lock_rounded, // Ikon gembok
+                imagePath: 'assets/training/training.png',
+                isLocked: !isAuth, // Kirim status kunci ke UI kartu
+                onTap: () {
+                  if (!isAuth) {
+                    // POP-UP PERINGATAN KETIKA GUEST KLIK LATIHAN
+                    Get.defaultDialog(
+                        title: "Fitur Terkunci",
+                        titleStyle: const TextStyle(fontWeight: FontWeight.bold),
+                        middleText: "Silakan Login atau Register untuk memulai program Training.",
+                        textConfirm: "Login Sekarang",
+                        textCancel: "Batal",
+                        confirmTextColor: Colors.white,
+                        cancelTextColor: const Color(0xFF2E6930),
+                        buttonColor: const Color(0xFF2E6930),
+                        onConfirm: () {
+                          Get.back();
+                          Get.toNamed('/login');
+                        }
+                    );
+                    return;
+                  }
+
+                  // Jika sudah login, lanjut ke halaman Latihan
+                  if (Get.isRegistered<dynamic>(tag: 'MainController')) {
+                    Get.find<dynamic>(tag: 'MainController').changePage(1);
+                  } else {
+                    Get.offAllNamed('/main', arguments: 1);
+                  }
+                }
+            ),
+            const SizedBox(width: 16),
             _AccessCard(
                 title: 'Plan Mountain\nTrip',
                 subtitle: 'Explore',
