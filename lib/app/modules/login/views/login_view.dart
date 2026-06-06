@@ -80,17 +80,18 @@ class LoginView extends GetView<LoginController> {
                     ),
                     const SizedBox(height: 28),
 
-                    // --- INPUT EMAIL & PASSWORD ---
+                    // --- INPUT EMAIL ---
                     _CustomLoginInputField(
                       hint: 'Email Address',
                       icon: Icons.mail_outline_rounded,
                       textController: controller.emailController,
                     ),
                     const SizedBox(height: 16),
-                    _CustomLoginInputField(
+
+                    // --- INPUT PASSWORD (MENGGUNAKAN WIDGET KHUSUS AGAR TIDAK ERROR) ---
+                    _PasswordFieldInputField(
                       hint: 'Password',
                       icon: Icons.lock_outline_rounded,
-                      isPassword: true,
                       textController: controller.passwordController,
                     ),
                     const SizedBox(height: 28),
@@ -101,7 +102,10 @@ class LoginView extends GetView<LoginController> {
                     const SizedBox(height: 28),
                     const _DividerSection(),
                     const SizedBox(height: 28),
+
+                    // --- TOMBOL GOOGLE ---
                     const _GoogleButtonAction(),
+
                     const SizedBox(height: 28),
                     const _RegisterLinkSection(),
                     const SizedBox(height: 16),
@@ -183,10 +187,10 @@ class _LogoAndTitleSection extends StatelessWidget {
   }
 }
 
+// --- WIDGET INPUT BIASA (EMAIL / TEXT TANPA OBX) ---
 class _CustomLoginInputField extends StatelessWidget {
   final String hint;
   final IconData icon;
-  final bool isPassword;
   final TextEditingController textController;
 
   const _CustomLoginInputField({
@@ -194,14 +198,12 @@ class _CustomLoginInputField extends StatelessWidget {
     required this.hint,
     required this.icon,
     required this.textController,
-    this.isPassword = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: textController,
-      obscureText: isPassword,
       style: const TextStyle(fontSize: 14, color: Color(0xFF1A1D1A)),
       decoration: InputDecoration(
         filled: true,
@@ -213,26 +215,8 @@ class _CustomLoginInputField extends StatelessWidget {
           color: const Color(0xFF2E6930).withOpacity(0.4),
           size: 20,
         ),
-        suffixIcon: isPassword
-            ? IconButton(
-                icon: Icon(
-                  Icons.visibility_off_outlined,
-                  color: Colors.grey.shade400,
-                  size: 20,
-                ),
-                onPressed: () {
-                  // TODO: Toggle visibility password
-                },
-              )
-            : null,
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 14,
-          horizontal: 16,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
@@ -240,6 +224,61 @@ class _CustomLoginInputField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5),
+        ),
+      ),
+    );
+  }
+}
+
+// --- WIDGET KHUSUS PASSWORD (PAKAI OBX DAN REAKTIF) ---
+class _PasswordFieldInputField extends StatelessWidget {
+  final String hint;
+  final IconData icon;
+  final TextEditingController textController;
+  final RxBool _obscureText = true.obs;
+
+  _PasswordFieldInputField({
+    super.key,
+    required this.hint,
+    required this.icon,
+    required this.textController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+          () => TextField(
+        controller: textController,
+        obscureText: _obscureText.value,
+        style: const TextStyle(fontSize: 14, color: Color(0xFF1A1D1A)),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFFF9FBFA),
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          prefixIcon: Icon(
+            icon,
+            color: const Color(0xFF2E6930).withOpacity(0.4),
+            size: 20,
+          ),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscureText.value ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              color: Colors.grey.shade400,
+              size: 20,
+            ),
+            onPressed: () => _obscureText.value = !_obscureText.value,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5),
+          ),
         ),
       ),
     );
@@ -255,41 +294,28 @@ class _LoginButtonAction extends GetView<LoginController> {
       width: double.infinity,
       height: 52,
       child: Obx(
-        () => ElevatedButton(
+            () => ElevatedButton(
           style: ElevatedButton.styleFrom(
             backgroundColor: const Color(0xFF2E6930),
             foregroundColor: Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
             elevation: 0,
           ),
-          onPressed: controller.isLoading.value
-              ? null
-              : () => controller.loginUser(),
+          onPressed: controller.isLoading.value ? null : () => controller.loginUser(),
           child: controller.isLoading.value
               ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 3,
-                  ),
-                )
+            height: 20,
+            width: 20,
+            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+          )
               : const Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Login',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    SizedBox(width: 6),
-                    Icon(Icons.arrow_forward_rounded, size: 18),
-                  ],
-                ),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text('Login', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              SizedBox(width: 6),
+              Icon(Icons.arrow_forward_rounded, size: 18),
+            ],
+          ),
         ),
       ),
     );
@@ -308,11 +334,7 @@ class _DividerSection extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16),
           child: Text(
             'OR CONTINUE WITH',
-            style: TextStyle(
-              color: Colors.grey.shade400,
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.grey.shade400, fontSize: 11, fontWeight: FontWeight.bold),
           ),
         ),
         Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
@@ -321,7 +343,7 @@ class _DividerSection extends StatelessWidget {
   }
 }
 
-class _GoogleButtonAction extends StatelessWidget {
+class _GoogleButtonAction extends GetView<LoginController> {
   const _GoogleButtonAction({super.key});
 
   @override
@@ -329,35 +351,37 @@ class _GoogleButtonAction extends StatelessWidget {
     return SizedBox(
       width: double.infinity,
       height: 52,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFEFEFEF)),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
+      child: Obx(
+            () => OutlinedButton(
+          style: OutlinedButton.styleFrom(
+            backgroundColor: Colors.white,
+            side: const BorderSide(color: Color(0xFFEFEFEF)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
           ),
-        ),
-        onPressed: () {},
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/gambar/Google.png',
-              width: 22,
-              cacheWidth: 50,
-              errorBuilder: (c, e, s) =>
-                  const Icon(Icons.g_mobiledata, color: Colors.red),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Google',
-              style: TextStyle(
-                color: Color(0xFF1A1D1A),
-                fontSize: 15,
-                fontWeight: FontWeight.bold,
+          onPressed: controller.isLoading.value ? null : () => controller.loginWithGoogle(),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Opacity(
+                opacity: controller.isLoading.value ? 0.5 : 1.0,
+                child: Image.asset(
+                  'assets/gambar/Google.png',
+                  width: 22,
+                  cacheWidth: 50,
+                  errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.red),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(width: 12),
+              Text(
+                controller.isLoading.value ? 'Connecting...' : 'Google',
+                style: TextStyle(
+                  color: controller.isLoading.value ? Colors.grey : const Color(0xFF1A1D1A),
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -379,10 +403,7 @@ class _RegisterLinkSection extends StatelessWidget {
             children: [
               TextSpan(
                 text: 'Register',
-                style: TextStyle(
-                  color: Color(0xFF2E6930),
-                  fontWeight: FontWeight.bold,
-                ),
+                style: TextStyle(color: Color(0xFF2E6930), fontWeight: FontWeight.bold),
               ),
             ],
           ),

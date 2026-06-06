@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hikingfit/app/modules/ubahpassword/controllers/ubahpassword_controller.dart';
-
+import '../controllers/ubahpassword_controller.dart';
 
 class UbahpasswordView extends GetView<UbahpasswordController> {
   const UbahpasswordView({super.key});
@@ -29,28 +28,43 @@ class UbahpasswordView extends GetView<UbahpasswordController> {
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: const [
-            SizedBox(height: 16),
-            _LockHeaderSection(),
-            SizedBox(height: 40),
+          children: [
+            const SizedBox(height: 16),
+            const _LockHeaderSection(),
+            const SizedBox(height: 40),
+
+            // --- FIELD PASSWORD LAMA ---
             _CustomPasswordField(
               label: 'Current Password',
               hint: 'Enter current password',
+              textController: controller.currentPasswordController,
+              isObscure: controller.isObscureCurrent,
             ),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
+
+            // --- FIELD PASSWORD BARU ---
             _CustomPasswordField(
               label: 'New Password',
               hint: 'Enter new password',
+              textController: controller.newPasswordController,
+              isObscure: controller.isObscureNew,
             ),
-            SizedBox(height: 12),
-            _PasswordRequirementsBox(),
-            SizedBox(height: 20),
+            const SizedBox(height: 12),
+            const _PasswordRequirementsBox(),
+            const SizedBox(height: 20),
+
+            // --- FIELD KONFIRMASI PASSWORD ---
             _CustomPasswordField(
               label: 'Confirm New Password',
               hint: 'Re-enter new password',
+              textController: controller.confirmPasswordController,
+              isObscure: controller.isObscureConfirm,
+              isLast: true,
             ),
-            SizedBox(height: 40),
-            _ActionButtonsSection(),
+            const SizedBox(height: 40),
+
+            // --- TOMBOL AKSI ---
+            const _ActionButtonsSection(),
           ],
         ),
       ),
@@ -59,7 +73,7 @@ class UbahpasswordView extends GetView<UbahpasswordController> {
 }
 
 // =========================================================
-// OPTIMIZED PASSWORD SUB-WIDGETS (STATELESS CLASS)
+// OPTIMIZED PASSWORD SUB-WIDGETS
 // =========================================================
 
 class _LockHeaderSection extends StatelessWidget {
@@ -119,8 +133,17 @@ class _LockHeaderSection extends StatelessWidget {
 class _CustomPasswordField extends StatelessWidget {
   final String label;
   final String hint;
+  final TextEditingController textController;
+  final RxBool isObscure;
+  final bool isLast;
 
-  const _CustomPasswordField({required this.label, required this.hint});
+  const _CustomPasswordField({
+    required this.label,
+    required this.hint,
+    required this.textController,
+    required this.isObscure,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -132,18 +155,23 @@ class _CustomPasswordField extends StatelessWidget {
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A1D1A)),
         ),
         const SizedBox(height: 8),
-        TextFormField(
-          obscureText: true, // Proteksi input teks sandi
+        // Obx dipakai agar saat ikon mata diklik, hanya textfield ini yang dirender ulang
+        Obx(() => TextFormField(
+          controller: textController,
+          obscureText: isObscure.value,
+          textInputAction: isLast ? TextInputAction.done : TextInputAction.next,
           style: const TextStyle(color: Color(0xFF1A1D1A), fontSize: 14),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
             prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFF2E6930), size: 20),
             suffixIcon: IconButton(
-              icon: Icon(Icons.visibility_off_outlined, color: Colors.grey.shade400, size: 20),
-              onPressed: () {
-                // Catatan: Nanti kalau sudah pasang controller, logika hide/show ditaruh di sini ya Bang
-              },
+              icon: Icon(
+                  isObscure.value ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                  color: Colors.grey.shade400,
+                  size: 20
+              ),
+              onPressed: () => isObscure.value = !isObscure.value, // Fungsi tampil/sembunyi password
             ),
             filled: true,
             fillColor: Colors.white,
@@ -161,7 +189,7 @@ class _CustomPasswordField extends StatelessWidget {
               borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5),
             ),
           ),
-        ),
+        )),
       ],
     );
   }
@@ -211,7 +239,7 @@ class _RequirementRow extends StatelessWidget {
   }
 }
 
-class _ActionButtonsSection extends StatelessWidget {
+class _ActionButtonsSection extends GetView<UbahpasswordController> {
   const _ActionButtonsSection();
 
   @override
@@ -221,29 +249,23 @@ class _ActionButtonsSection extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 52,
-          child: ElevatedButton(
+          child: Obx(() => ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E6930),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 0,
             ),
-            onPressed: () {
-              // Menghapus tumpukan history halaman lama dan kembali ke tab Settings (Index 3)
-              Get.offAllNamed('/main', arguments: 3);
-              Get.snackbar(
-                'Success',
-                'Password berhasil diubah!',
-                backgroundColor: const Color(0xFF2E6930),
-                colorText: Colors.white,
-                snackPosition: SnackPosition.TOP, // Dipindahkan ke top agar seimbang dengan edit profil
-                margin: const EdgeInsets.all(16),
-                borderRadius: 12,
-                icon: const Icon(Icons.check_circle_rounded, color: Colors.white, size: 20),
-              );
-            },
-            child: const Text('Update Password', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          ),
+            // Jika loading, tombol dinonaktifkan
+            onPressed: controller.isLoading.value ? null : () => controller.updatePassword(),
+            child: controller.isLoading.value
+                ? const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3)
+            )
+                : const Text('Update Password', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          )),
         ),
         const SizedBox(height: 12),
         SizedBox(

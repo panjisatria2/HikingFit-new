@@ -12,7 +12,20 @@
           "package_name": "com.hikingfit.hikingfit"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "19014984436-fcggsn63d2g2ojniis6uc4p1i0vngv64.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.hikingfit.hikingfit",
+            "certificate_hash": "36abdddbb3f0aa4a2ffbe47a9271c47aa8465a9d"
+          }
+        },
+        {
+          "client_id": "19014984436-9s2f6f8j9u6mfj0rb9hef9du3vuflm3m.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyB2B8SC45sHm6yKSKEccRYR1EDTCowTehA"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "19014984436-9s2f6f8j9u6mfj0rb9hef9du3vuflm3m.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

@@ -1,7 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:hikingfit/app/modules/ubahprofile/controllers/ubahprofile_controller.dart';
-
+import '../controllers/ubahprofile_controller.dart';
 
 class UbahprofileView extends GetView<UbahprofileController> {
   const UbahprofileView({super.key});
@@ -9,7 +10,7 @@ class UbahprofileView extends GetView<UbahprofileController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF9FBFA), // Clean background khas modern UI
+      backgroundColor: const Color(0xFFF9FBFA),
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -28,31 +29,31 @@ class UbahprofileView extends GetView<UbahprofileController> {
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
         child: Column(
-          children: const [
-            _AvatarPickerSection(),
-            SizedBox(height: 32),
+          children: [
+            const _AvatarPickerSection(),
+            const SizedBox(height: 32),
             _CustomInputField(
               label: 'Full Name',
               hint: 'Masukkan nama lengkap',
               icon: Icons.person_outline_rounded,
-              initialValue: 'Panji Satria',
+              textController: controller.fullNameController,
             ),
-            SizedBox(height: 16),
+            const SizedBox(height: 16),
             _CustomInputField(
               label: 'Email Address',
               hint: 'Email',
               icon: Icons.mail_outline_rounded,
-              initialValue: 'panji@example.com',
-              isEnabled: false, // Email terkunci (read-only)
+              textController: controller.emailController,
+              isEnabled: false, // Email tetap read-only
             ),
-            SizedBox(height: 16),
-            _BodyMetricsRow(),
-            SizedBox(height: 16),
-            _DemographicsRow(),
-            SizedBox(height: 32),
-            _BmiScoreCardSection(),
-            SizedBox(height: 40),
-            _ActionButtonsSection(),
+            const SizedBox(height: 16),
+            const _BodyMetricsRow(),
+            const SizedBox(height: 16),
+            const _DemographicsRow(),
+            const SizedBox(height: 32),
+            const _BmiScoreCardSection(),
+            const SizedBox(height: 40),
+            const _ActionButtonsSection(),
           ],
         ),
       ),
@@ -64,7 +65,7 @@ class UbahprofileView extends GetView<UbahprofileController> {
 // OPTIMIZED PROFILE SUB-WIDGETS (STATELESS CLASS)
 // =========================================================
 
-class _AvatarPickerSection extends StatelessWidget {
+class _AvatarPickerSection extends GetView<UbahprofileController> {
   const _AvatarPickerSection();
 
   @override
@@ -72,34 +73,80 @@ class _AvatarPickerSection extends StatelessWidget {
     return Center(
       child: Stack(
         children: [
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade300,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 4),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.06),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
+          Obx(() {
+            Widget imageContent;
+            final String imgData = controller.existingImageUrl.value;
+
+            // 1. Jika ada file lokal yang baru dipilih dari kamera/galeri
+            if (controller.imageFile.value != null) {
+              imageContent = ClipOval(
+                child: Image.file(
+                  controller.imageFile.value!,
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                ),
+              );
+            }
+            // 2. Jika ada foto dari database (Base64 atau URL lama)
+            else if (imgData.isNotEmpty) {
+              imageContent = ClipOval(
+                child: imgData.startsWith('data:image')
+                    ? Image.memory(
+                  base64Decode(imgData.split(',')[1]), // Decode teks Base64
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.person_rounded, size: 54, color: Colors.white),
                 )
-              ],
-            ),
-            child: const Icon(Icons.person_rounded, size: 54, color: Colors.white),
-          ),
+                    : Image.network(
+                  imgData, // Jaga-jaga kalau ada sisa URL lawas
+                  width: 100,
+                  height: 100,
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) =>
+                  const Icon(Icons.person_rounded, size: 54, color: Colors.white),
+                ),
+              );
+            }
+            // 3. Jika belum punya foto sama sekali
+            else {
+              imageContent = const Icon(Icons.person_rounded, size: 54, color: Colors.white);
+            }
+
+            return Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                shape: BoxShape.circle,
+                border: Border.all(color: Colors.white, width: 4),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.06),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  )
+                ],
+              ),
+              child: imageContent,
+            );
+          }),
           Positioned(
             bottom: 0,
             right: 0,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2E6930),
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2.5),
+            child: GestureDetector(
+              onTap: () => controller.showImagePickerOptions(),
+              child: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF2E6930),
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2.5),
+                ),
+                child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
               ),
-              child: const Icon(Icons.camera_alt_rounded, color: Colors.white, size: 14),
             ),
           ),
         ],
@@ -108,13 +155,13 @@ class _AvatarPickerSection extends StatelessWidget {
   }
 }
 
-class _BodyMetricsRow extends StatelessWidget {
+class _BodyMetricsRow extends GetView<UbahprofileController> {
   const _BodyMetricsRow();
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
+      children: [
         Expanded(
           child: _CustomInputField(
             label: 'Weight (BB)',
@@ -122,9 +169,10 @@ class _BodyMetricsRow extends StatelessWidget {
             icon: Icons.scale_rounded,
             suffixText: 'kg',
             keyboardType: TextInputType.number,
+            textController: controller.weightController,
           ),
         ),
-        SizedBox(width: 16),
+        const SizedBox(width: 16),
         Expanded(
           child: _CustomInputField(
             label: 'Height (TB)',
@@ -132,6 +180,7 @@ class _BodyMetricsRow extends StatelessWidget {
             icon: Icons.height_rounded,
             suffixText: 'cm',
             keyboardType: TextInputType.number,
+            textController: controller.heightController,
           ),
         ),
       ],
@@ -139,13 +188,13 @@ class _BodyMetricsRow extends StatelessWidget {
   }
 }
 
-class _DemographicsRow extends StatelessWidget {
+class _DemographicsRow extends GetView<UbahprofileController> {
   const _DemographicsRow();
 
   @override
   Widget build(BuildContext context) {
     return Row(
-      children: const [
+      children: [
         Expanded(
           child: _CustomInputField(
             label: 'Age',
@@ -153,10 +202,11 @@ class _DemographicsRow extends StatelessWidget {
             icon: Icons.calendar_today_rounded,
             suffixText: 'yrs',
             keyboardType: TextInputType.number,
+            textController: controller.ageController, // <--- Sambungkan Controller Umur
           ),
         ),
-        SizedBox(width: 16),
-        Expanded(
+        const SizedBox(width: 16),
+        const Expanded(
           child: _CustomDropdownField(
             label: 'Gender',
             icon: Icons.wc_rounded,
@@ -171,19 +221,19 @@ class _CustomInputField extends StatelessWidget {
   final String label;
   final String hint;
   final IconData icon;
-  final String? initialValue;
   final bool isEnabled;
   final String? suffixText;
   final TextInputType keyboardType;
+  final TextEditingController? textController;
 
   const _CustomInputField({
     required this.label,
     required this.hint,
     required this.icon,
-    this.initialValue,
     this.isEnabled = true,
     this.suffixText,
     this.keyboardType = TextInputType.text,
+    this.textController,
   });
 
   @override
@@ -197,7 +247,7 @@ class _CustomInputField extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         TextFormField(
-          initialValue: initialValue,
+          controller: textController,
           enabled: isEnabled,
           keyboardType: keyboardType,
           style: TextStyle(color: isEnabled ? const Color(0xFF1A1D1A) : Colors.black38, fontSize: 14),
@@ -233,7 +283,7 @@ class _CustomInputField extends StatelessWidget {
   }
 }
 
-class _CustomDropdownField extends StatelessWidget {
+class _CustomDropdownField extends GetView<UbahprofileController> {
   final String label;
   final IconData icon;
 
@@ -249,33 +299,26 @@ class _CustomDropdownField extends StatelessWidget {
           style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Color(0xFF1A1D1A)),
         ),
         const SizedBox(height: 8),
-        DropdownButtonFormField<String>(
+        Obx(() => DropdownButtonFormField<String>(
+          // Tampilkan nilai reaktif dari controller secara aman
+          value: controller.selectedGender.value.isNotEmpty ? controller.selectedGender.value : null,
           style: const TextStyle(color: Color(0xFF1A1D1A), fontSize: 14),
           decoration: InputDecoration(
             prefixIcon: Icon(icon, color: const Color(0xFF2E6930), size: 20),
             filled: true,
             fillColor: Colors.white,
             contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: BorderSide.none,
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(14),
-              borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: BorderSide.none),
+            enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFFEFEFEF))),
+            focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(14), borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5)),
           ),
           items: const [
             DropdownMenuItem(value: 'Laki-laki', child: Text('Laki-laki')),
             DropdownMenuItem(value: 'Perempuan', child: Text('Perempuan')),
           ],
-          onChanged: (value) {},
+          onChanged: (value) => controller.changeGender(value), // <--- Panggil fungsi ubah gender
           hint: const Text('Pilih', style: TextStyle(color: Colors.grey, fontSize: 14)),
-        ),
+        )),
       ],
     );
   }
@@ -329,7 +372,7 @@ class _BmiScoreCardSection extends StatelessWidget {
   }
 }
 
-class _ActionButtonsSection extends StatelessWidget {
+class _ActionButtonsSection extends GetView<UbahprofileController> {
   const _ActionButtonsSection();
 
   @override
@@ -339,28 +382,22 @@ class _ActionButtonsSection extends StatelessWidget {
         SizedBox(
           width: double.infinity,
           height: 52,
-          child: ElevatedButton(
+          child: Obx(() => ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF2E6930),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
               elevation: 0,
             ),
-            onPressed: () {
-              // Mengarahkan ke rute core /main dan membuka tab Settings (Index 3)
-              Get.offAllNamed('/main', arguments: 3);
-              Get.snackbar(
-                'Berhasil',
-                'Profil berhasil diperbarui!',
-                backgroundColor: const Color(0xFF2E6930),
-                colorText: Colors.white,
-                snackPosition: SnackPosition.TOP,
-                margin: const EdgeInsets.all(16),
-                borderRadius: 12,
-              );
-            },
-            child: const Text('Simpan Perubahan', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
-          ),
+            onPressed: controller.isLoading.value ? null : () => controller.updateProfile(),
+            child: controller.isLoading.value
+                ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
+            )
+                : const Text('Simpan Perubahan', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          )),
         ),
         const SizedBox(height: 12),
         SizedBox(

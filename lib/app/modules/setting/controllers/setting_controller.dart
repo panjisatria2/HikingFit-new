@@ -9,16 +9,21 @@ import '../../../utils/api_endpoints.dart';
 class SettingController extends GetxController {
   final RxString fullName = 'Pendaki'.obs;
   final RxString email = ''.obs;
-  final RxString profileImageUrl = ''.obs; // <-- VARIABEL BARU
+  final RxString profileImageUrl = ''.obs;
   final RxDouble bmiValue = 0.0.obs;
   final RxString bmiStatus = 'Memuat...'.obs;
 
   final RxBool isLoggedIn = false.obs;
   final RxInt weight = 0.obs;
   final RxInt height = 0.obs;
+  final RxInt age = 0.obs;
+  final RxString gender = ''.obs;
+
   final RxBool isLoading = true.obs;
 
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage(aOptions: AndroidOptions(encryptedSharedPreferences: true));
+  final FlutterSecureStorage secureStorage = const FlutterSecureStorage(
+      aOptions: AndroidOptions(encryptedSharedPreferences: true)
+  );
 
   @override
   void onInit() {
@@ -38,13 +43,25 @@ class SettingController extends GetxController {
     }
   }
 
+  // =========================================================
+  // UPDATE: AMBIL TOKEN FRESH DARI FIREBASE
+  // =========================================================
   Future<void> loadProfileData() async {
     try {
       isLoading.value = true;
-      String? token = await secureStorage.read(key: 'jwt_token');
+      User? user = FirebaseAuth.instance.currentUser;
 
-      if (token != null) {
-        final response = await http.get(Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'), headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'});
+      if (user != null) {
+        // Ambil token langsung dari mesin Firebase Auth
+        String? token = await user.getIdToken();
+
+        final response = await http.get(
+            Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token'
+            }
+        );
 
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
@@ -53,10 +70,12 @@ class SettingController extends GetxController {
 
             fullName.value = data['fullName'] ?? 'Pendaki';
             email.value = data['email'] ?? '';
-            profileImageUrl.value = data['profileImageUrl'] ?? ''; // <-- TANGKAP FOTO
+            profileImageUrl.value = data['profileImageUrl'] ?? '';
             bmiValue.value = (data['bmi'] ?? 0).toDouble();
             weight.value = data['weight'] ?? 0;
             height.value = data['height'] ?? 0;
+            age.value = data['age'] ?? 0;
+            gender.value = data['gender'] ?? '';
 
             bmiStatus.value = _calculateBmiStatus(bmiValue.value);
           }
@@ -83,6 +102,7 @@ class SettingController extends GetxController {
 
   Future<void> handleLogout() async {
     await FirebaseAuth.instance.signOut();
+    // Hapus juga sisa token lama di memori lokal jika masih ada
     await secureStorage.delete(key: 'jwt_token');
     Get.offAllNamed('/login');
   }

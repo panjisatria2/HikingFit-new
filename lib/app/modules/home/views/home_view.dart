@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
@@ -70,6 +72,7 @@ class _BlurEffect extends StatelessWidget {
 
 class _HeaderSection extends GetView<HomeController> {
   const _HeaderSection();
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -79,31 +82,39 @@ class _HeaderSection extends GetView<HomeController> {
             Container(
               width: 50, height: 50,
               decoration: BoxDecoration(borderRadius: BorderRadius.circular(16), color: const Color(0xFFE8F5E9)),
-              // --- LOGIKA MENAMPILKAN FOTO ---
+              // --- TRANSLATOR PINTAR BASE64 DI HOME VIEW ---
               child: Obx(() {
-                if (controller.profileImageUrl.value.isNotEmpty) {
+                final String imgData = controller.profileImageUrl.value;
+
+                if (imgData.isNotEmpty) {
                   return ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      controller.profileImageUrl.value,
+                    child: imgData.startsWith('data:image')
+                        ? Image.memory(
+                      base64Decode(imgData.split(',')[1]), // Sulap teks string jadi foto fisik
                       fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildInitialAvatar(),
+                    )
+                        : Image.network(
+                      imgData,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildInitialAvatar(),
                     ),
                   );
                 } else {
-                  return Center(
-                    child: Text(
-                      controller.userName.value.isNotEmpty ? controller.userName.value[0].toUpperCase() : 'G',
-                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E6930)),
-                    ),
-                  );
+                  return _buildInitialAvatar();
                 }
               }),
             ),
             Obx(() => controller.isLoggedIn.value
                 ? Positioned(
               bottom: -2, right: -2,
-              child: Container(width: 14, height: 14, decoration: BoxDecoration(color: const Color(0xFF2ECC71), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2))),
-            ) : const SizedBox.shrink()),
+              child: Container(
+                width: 14, height: 14,
+                decoration: BoxDecoration(color: const Color(0xFF2ECC71), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2)),
+              ),
+            )
+                : const SizedBox.shrink()),
           ],
         ),
         const SizedBox(width: 16),
@@ -115,19 +126,37 @@ class _HeaderSection extends GetView<HomeController> {
           ],
         ),
         const Spacer(),
-        // ... (Bagian lonceng notifikasi biarkan persis seperti kode Abang)
         Obx(() => controller.isLoggedIn.value
             ? Container(
-          width: 45, height: 45, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
-          child: Stack(alignment: Alignment.center, children: [
-            const Icon(Icons.notifications_none_rounded, color: Color(0xFF1A1D1A)),
-            Positioned(top: 12, right: 12, child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle))),
-          ]),
-        ) : GestureDetector(
+          width: 45, height: 45,
+          decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4))]),
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              const Icon(Icons.notifications_none_rounded, color: Color(0xFF1A1D1A)),
+              Positioned(top: 12, right: 12, child: Container(width: 6, height: 6, decoration: const BoxDecoration(color: Colors.redAccent, shape: BoxShape.circle))),
+            ],
+          ),
+        )
+            : GestureDetector(
           onTap: () => Get.toNamed('/login'),
-          child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: const Color(0xFF2E6930), borderRadius: BorderRadius.circular(20)), child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(color: const Color(0xFF2E6930), borderRadius: BorderRadius.circular(20)),
+            child: const Text('Sign In', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+          ),
         )),
       ],
+    );
+  }
+
+  // Helper jika foto kosong / error, tampilkan huruf pertama nama user
+  Widget _buildInitialAvatar() {
+    return Center(
+      child: Text(
+        controller.userName.value.isNotEmpty ? controller.userName.value[0].toUpperCase() : 'G',
+        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF2E6930)),
+      ),
     );
   }
 }

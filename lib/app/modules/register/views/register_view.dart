@@ -77,7 +77,7 @@ class RegisterView extends GetView<RegisterController> {
                     ),
                     const SizedBox(height: 28),
 
-                    // --- INPUT FORM ---
+                    // --- INPUT FORM BIASA (TANPA OBX) ---
                     _CustomRegisterInputField(
                       hint: 'Full Name',
                       icon: Icons.person_outline_rounded,
@@ -90,28 +90,23 @@ class RegisterView extends GetView<RegisterController> {
                       textController: controller.emailController,
                     ),
                     const SizedBox(height: 16),
-                    _CustomRegisterInputField(
+
+                    // --- INPUT KATEGORI PASSWORD (REAKTIF PAKAI OBX) ---
+                    _PasswordRegisterInputField(
                       hint: 'Password',
                       icon: Icons.lock_outline_rounded,
-                      isPassword: true,
                       textController: controller.passwordController,
                     ),
                     const SizedBox(height: 16),
-                    _CustomRegisterInputField(
+                    _PasswordRegisterInputField(
                       hint: 'Confirm Password',
                       icon: Icons.shield_outlined,
-                      isPassword: true,
                       textController: controller.confirmPasswordController,
                     ),
                     const SizedBox(height: 28),
 
                     // --- TOMBOL REGISTER ---
                     const _CreateAccountButtonAction(),
-
-                    const SizedBox(height: 28),
-                    const _DividerSection(),
-                    const SizedBox(height: 28),
-                    const _GoogleButtonAction(),
                     const SizedBox(height: 28),
                     const _LoginLinkSection(),
                     const SizedBox(height: 16),
@@ -132,35 +127,19 @@ class _LogoAndTitleSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      top: 54,
+      top: 75,
       left: 0,
       right: 0,
       child: Column(
         children: [
           Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.08),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                )
-              ],
-            ),
-            padding: const EdgeInsets.all(10),
+            width: 80,
+            height: 80,
             child: Image.asset(
               'assets/gambar/logo.png',
-              fit: BoxFit.contain,
-              cacheWidth: 120,
-              errorBuilder: (context, error, stackTrace) =>
-              const Icon(Icons.terrain_rounded, color: Color(0xFF2E6930), size: 36),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           const Text(
             'HikingFit',
             style: TextStyle(
@@ -186,10 +165,10 @@ class _LogoAndTitleSection extends StatelessWidget {
   }
 }
 
+// --- WIDGET KHUSUS INPUT TEXT BIASA (NAMA & EMAIL - AMAN TANPA OBX) ---
 class _CustomRegisterInputField extends StatelessWidget {
   final String hint;
   final IconData icon;
-  final bool isPassword;
   final TextEditingController textController;
 
   const _CustomRegisterInputField({
@@ -197,14 +176,12 @@ class _CustomRegisterInputField extends StatelessWidget {
     required this.hint,
     required this.icon,
     required this.textController,
-    this.isPassword = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return TextField(
       controller: textController,
-      obscureText: isPassword,
       style: const TextStyle(fontSize: 14, color: Color(0xFF1A1D1A)),
       decoration: InputDecoration(
         filled: true,
@@ -212,12 +189,6 @@ class _CustomRegisterInputField extends StatelessWidget {
         hintText: hint,
         hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
         prefixIcon: Icon(icon, color: const Color(0xFF2E6930).withOpacity(0.4), size: 20),
-        suffixIcon: isPassword
-            ? IconButton(
-          icon: Icon(Icons.visibility_off_outlined, color: Colors.grey.shade400, size: 20),
-          onPressed: () {},
-        )
-            : null,
         contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
@@ -230,6 +201,60 @@ class _CustomRegisterInputField extends StatelessWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5),
+        ),
+      ),
+    );
+  }
+}
+
+// --- WIDGET KHUSUS PASSWORD (REAKTIF MENGGUNAKAN OBX) ---
+class _PasswordRegisterInputField extends StatelessWidget {
+  final String hint;
+  final IconData icon;
+  final TextEditingController textController;
+  final RxBool _obscureText = true.obs;
+
+  _PasswordRegisterInputField({
+    super.key,
+    required this.hint,
+    required this.icon,
+    required this.textController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Obx(
+          () => TextField(
+        controller: textController,
+        obscureText: _obscureText.value,
+        style: const TextStyle(fontSize: 14, color: Color(0xFF1A1D1A)),
+        decoration: InputDecoration(
+          filled: true,
+          fillColor: const Color(0xFFF9FBFA),
+          hintText: hint,
+          hintStyle: TextStyle(color: Colors.grey.shade400, fontSize: 14),
+          prefixIcon: Icon(icon, color: const Color(0xFF2E6930).withOpacity(0.4), size: 20),
+          suffixIcon: IconButton(
+            icon: Icon(
+              _obscureText.value ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              color: Colors.grey.shade400,
+              size: 20,
+            ),
+            onPressed: () => _obscureText.value = !_obscureText.value,
+          ),
+          contentPadding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFEFEFEF)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFF2E6930), width: 1.5),
+          ),
         ),
       ),
     );
@@ -271,63 +296,6 @@ class _CreateAccountButtonAction extends GetView<RegisterController> {
           ],
         ),
       )),
-    );
-  }
-}
-
-class _DividerSection extends StatelessWidget {
-  const _DividerSection({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            'OR SIGN UP WITH',
-            style: TextStyle(color: Colors.grey.shade400, fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-        ),
-        Expanded(child: Divider(color: Colors.grey.shade200, thickness: 1)),
-      ],
-    );
-  }
-}
-
-class _GoogleButtonAction extends StatelessWidget {
-  const _GoogleButtonAction({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      height: 52,
-      child: OutlinedButton(
-        style: OutlinedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(color: Color(0xFFEFEFEF)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-        ),
-        onPressed: () {},
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Image.asset(
-              'assets/gambar/Google.png',
-              width: 22,
-              cacheWidth: 50,
-              errorBuilder: (c, e, s) => const Icon(Icons.g_mobiledata, color: Colors.red),
-            ),
-            const SizedBox(width: 12),
-            const Text(
-              'Google',
-              style: TextStyle(color: Color(0xFF1A1D1A), fontSize: 15, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

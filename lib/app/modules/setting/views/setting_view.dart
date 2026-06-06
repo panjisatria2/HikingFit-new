@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../controllers/setting_controller.dart';
@@ -104,13 +106,20 @@ class _HeaderSection extends StatelessWidget {
 
 class _ProfileCardSection extends GetView<SettingController> {
   const _ProfileCardSection({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))]),
+      decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 15, offset: const Offset(0, 5))]
+      ),
       child: Obx(() {
         final bool isAuth = controller.isLoggedIn.value;
+        final String imgData = controller.profileImageUrl.value;
+
         return Row(
           children: [
             Stack(
@@ -118,23 +127,32 @@ class _ProfileCardSection extends GetView<SettingController> {
                 Container(
                   width: 65, height: 65,
                   decoration: BoxDecoration(color: const Color(0xFFE8F1E8), borderRadius: BorderRadius.circular(20)),
-                  // --- TAMPILKAN FOTO DI SINI ---
-                  child: controller.profileImageUrl.value.isNotEmpty
+                  // --- LOGIKA PINTAR TRANSLATE BASE64 ---
+                  child: imgData.isNotEmpty
                       ? ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: Image.network(controller.profileImageUrl.value, fit: BoxFit.cover),
-                  )
-                      : Center(
-                    child: Text(
-                      controller.fullName.value.isNotEmpty ? controller.fullName.value[0].toUpperCase() : 'G',
-                      style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF4A7C59)),
+                    child: imgData.startsWith('data:image')
+                        ? Image.memory(
+                      base64Decode(imgData.split(',')[1]), // Decode teks Base64 jadi file gambar fisik
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildInitialAvatar(),
+                    )
+                        : Image.network(
+                      imgData,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) => _buildInitialAvatar(),
                     ),
-                  ),
+                  )
+                      : _buildInitialAvatar(),
                 ),
                 if (isAuth)
                   Positioned(
                     bottom: -2, right: -2,
-                    child: Container(padding: const EdgeInsets.all(3), decoration: BoxDecoration(color: const Color(0xFF2E5B2C), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)), child: const Icon(Icons.check_rounded, color: Colors.white, size: 10)),
+                    child: Container(
+                        padding: const EdgeInsets.all(3),
+                        decoration: BoxDecoration(color: const Color(0xFF2E5B2C), shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2.5)),
+                        child: const Icon(Icons.check_rounded, color: Colors.white, size: 10)
+                    ),
                   ),
               ],
             ),
@@ -149,7 +167,6 @@ class _ProfileCardSection extends GetView<SettingController> {
                 ],
               ),
             ),
-            // ... (Tombol login register guest biarkan sama)
             if (!isAuth)
               Row(
                 children: [
@@ -161,6 +178,16 @@ class _ProfileCardSection extends GetView<SettingController> {
           ],
         );
       }),
+    );
+  }
+
+  // Helper untuk menampilkan Inisial Huruf jika foto gagal/kosong
+  Widget _buildInitialAvatar() {
+    return Center(
+      child: Text(
+        controller.fullName.value.isNotEmpty ? controller.fullName.value[0].toUpperCase() : 'G',
+        style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Color(0xFF4A7C59)),
+      ),
     );
   }
 }
@@ -265,7 +292,10 @@ class _AccountCard extends GetView<SettingController> {
                 'email': controller.email.value,
                 'height': controller.height.value,
                 'weight': controller.weight.value,
-                'profileImageUrl': controller.profileImageUrl.value, // <-- KIRIM FOTO KE HALAMAN UBAH PROFIL
+                'profileImageUrl': controller.profileImageUrl.value,
+                // --- PASTIKAN DUA BARIS INI ADA ---
+                'age': controller.age.value,
+                'gender': controller.gender.value,
               }) : controller.showGuestWarning(),
               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               leading: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: const Color(0xFFEDF2FF), borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.person_outline_rounded, color: Colors.blueAccent)),

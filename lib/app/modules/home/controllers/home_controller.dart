@@ -2,12 +2,13 @@ import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
+// secure_storage sudah tidak terlalu dibutuhkan untuk token, tapi dibiarkan jika ada keperluan lain
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../../../utils/api_endpoints.dart';
 
 class HomeController extends GetxController {
   final RxString userName = 'Pendaki'.obs;
-  final RxString profileImageUrl = ''.obs; // <-- VARIABEL BARU UNTUK FOTO
+  final RxString profileImageUrl = ''.obs;
   final RxBool isLoggedIn = false.obs;
 
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage(
@@ -24,21 +25,28 @@ class HomeController extends GetxController {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       isLoggedIn.value = true;
-      loadProfileData(); // Ubah nama fungsi agar lebih pas
+      loadProfileData();
     } else {
       isLoggedIn.value = false;
     }
   }
 
+  // =========================================================
+  // UPDATE: AMBIL TOKEN FRESH DARI FIREBASE
+  // =========================================================
   Future<void> loadProfileData() async {
     try {
-      String? token = await secureStorage.read(key: 'jwt_token');
-      if (token != null) {
+      User? user = FirebaseAuth.instance.currentUser;
+
+      if (user != null) {
+        // Baris sakti: Firebase akan otomatis memberikan token baru jika token lama sudah expired (lewat 1 jam)
+        String? token = await user.getIdToken();
+
         final response = await http.get(
           Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'),
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
+            'Authorization': 'Bearer $token', // Kirim token fresh ke Vercel
           },
         );
 
@@ -47,13 +55,12 @@ class HomeController extends GetxController {
           if (jsonResponse['success'] == true && jsonResponse['data'] != null) {
             final data = jsonResponse['data'];
             userName.value = data['fullName'] ?? 'Pendaki';
-            // TANGKAP LINK FOTO DARI VERCEL
             profileImageUrl.value = data['profileImageUrl'] ?? '';
           }
         }
       }
     } catch (e) {
-      // Abaikan jika error
+      // Abaikan jika error agar tidak mengganggu UI
     }
   }
 }
