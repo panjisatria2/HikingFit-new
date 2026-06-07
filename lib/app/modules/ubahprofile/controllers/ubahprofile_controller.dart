@@ -4,9 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http;
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../utils/api_endpoints.dart';
+import '../../../utils/api_service.dart'; // Import Kurir Cerdas
 
 class UbahprofileController extends GetxController {
   final fullNameController = TextEditingController();
@@ -21,9 +19,6 @@ class UbahprofileController extends GetxController {
   final RxBool isLoading = false.obs;
 
   final ImagePicker _picker = ImagePicker();
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
 
   @override
   void onInit() {
@@ -56,7 +51,6 @@ class UbahprofileController extends GetxController {
 
   Future<void> pickImage(ImageSource source) async {
     try {
-      // Kita kompres gambar agak kecil (quality: 40) agar ukuran teks Base64 tidak terlalu raksasa
       final XFile? pickedFile = await _picker.pickImage(source: source, imageQuality: 40);
       if (pickedFile != null) {
         imageFile.value = File(pickedFile.path);
@@ -76,7 +70,7 @@ class UbahprofileController extends GetxController {
   }
 
   // =========================================================
-  // LOGIKA SIMPAN BARU: MENGGUNAKAN BASE64 (GRATIS & TANPA STORAGE)
+  // UPDATE KE BACKEND MENGGUNAKAN API SERVICE (PUT)
   // =========================================================
   Future<void> updateProfile() async {
     try {
@@ -86,41 +80,30 @@ class UbahprofileController extends GetxController {
 
       String finalImageData = existingImageUrl.value;
 
-      // JIKA USER MEMILIH FOTO BARU, UBAH JADI STRING BASE64
       if (imageFile.value != null) {
         List<int> imageBytes = await imageFile.value!.readAsBytesSync();
-        // Mengubah file gambar menjadi text string murni
         String base64Image = base64Encode(imageBytes);
         finalImageData = "data:image/jpeg;base64,$base64Image";
       }
 
-      // Update display name di Firebase Auth lokal saja
       await user.updateDisplayName(fullNameController.text.trim());
 
-      // TEMBAK LANGSUNG KE BACKEND VERCEL
-      String? token = await secureStorage.read(key: 'jwt_token');
-      final response = await http.put(
-        Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'fullName': fullNameController.text.trim(),
-          'height': int.tryParse(heightController.text) ?? 0,
-          'weight': int.tryParse(weightController.text) ?? 0,
-          'profileImageUrl': finalImageData, // Mengirim data string gambar ke Firestore/MongoDB via Vercel
-          'age': int.tryParse(ageController.text) ?? 0,
-          'gender': selectedGender.value.isNotEmpty ? selectedGender.value : null,
-        }),
-      );
+      // Sangat ringkas! Menggunakan ApiService.put
+      final response = await ApiService.put('/api/auth/profile', {
+        'fullName': fullNameController.text.trim(),
+        'height': int.tryParse(heightController.text) ?? 0,
+        'weight': int.tryParse(weightController.text) ?? 0,
+        'profileImageUrl': finalImageData,
+        'age': int.tryParse(ageController.text) ?? 0,
+        'gender': selectedGender.value.isNotEmpty ? selectedGender.value : null,
+      });
 
       if (response.statusCode == 200) {
         Get.offAllNamed('/main', arguments: 3);
-        Get.snackbar('Sukses', 'Profil berhasil diperbarui tanpa hambatan biaya!',
+        Get.snackbar('Sukses', 'Profil berhasil diperbarui!',
             backgroundColor: const Color(0xFF2E6930), colorText: Colors.white);
       } else {
-        Get.snackbar('Gagal', 'Server menolak data kuesioner.', backgroundColor: Colors.red, colorText: Colors.white);
+        Get.snackbar('Gagal', 'Server menolak pembaruan data.', backgroundColor: Colors.red, colorText: Colors.white);
       }
     } catch (e) {
       Get.snackbar('Error', 'Terjadi kesalahan sistem: $e', backgroundColor: Colors.red, colorText: Colors.white);

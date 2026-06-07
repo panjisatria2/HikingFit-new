@@ -9,14 +9,11 @@ class CamlatihanView extends GetView<CamlatihanController> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF09090B), // Hitam pekat modern
+      backgroundColor: const Color(0xFF09090B),
       body: SafeArea(
         child: Stack(
           children: [
-            // 1. LIVE VIEWPORT STREAM KAMERA ASLI HP
             const _CameraPreviewSection(),
-
-            // 2. OVERLAY LAYER INTERFACES (HUD & CONTROLS)
             Column(
               children: const [
                 _TopHeaderOverlay(),
@@ -32,50 +29,32 @@ class CamlatihanView extends GetView<CamlatihanController> {
   }
 }
 
-// =========================================================
-// PREMIUM CAMERA TRACKER SUB-WIDGETS (STATELESS CLASS)
-// =========================================================
-
 class _CameraPreviewSection extends GetView<CamlatihanController> {
   const _CameraPreviewSection();
 
   @override
   Widget build(BuildContext context) {
     return Obx(() {
-      // Jika kamera belum siap/sedang memuat, tampilkan loading spinner hitam elegan
       if (!controller.isCameraInitialized.value || controller.cameraController == null) {
-        return const Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF2E6930),
-          ),
-        );
+        return const Center(child: CircularProgressIndicator(color: Color(0xFF2E6930)));
       }
 
-      // Hitung skala rasio agar preview kamera penuh (fullscreen) sesuai aspek rasio HP
       final size = MediaQuery.of(context).size;
       var deviceRatio = size.width / size.height;
 
       return Stack(
         alignment: Alignment.center,
         children: [
-          // Render Live Preview Kamera dari Hardware HP
           Transform.scale(
             scale: 1 / (controller.cameraController!.value.aspectRatio * deviceRatio),
-            child: Center(
-              child: CameraPreview(controller.cameraController!),
-            ),
+            child: Center(child: CameraPreview(controller.cameraController!)),
           ),
-
-          // --- GRAPHIC GUIDE FRAME AI (GARIS PEMANDU POSTUR TUBUH) ---
           Positioned.fill(
             child: Padding(
               padding: const EdgeInsets.all(40.0),
               child: Container(
                 decoration: BoxDecoration(
-                  border: Border.all(
-                    color: const Color(0xFF2E6930).withOpacity(0.4),
-                    width: 2,
-                  ),
+                  border: Border.all(color: const Color(0xFF2E6930).withOpacity(0.4), width: 2),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Stack(
@@ -87,10 +66,7 @@ class _CameraPreviewSection extends GetView<CamlatihanController> {
                     Center(
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
+                        decoration: BoxDecoration(color: Colors.black.withOpacity(0.6), borderRadius: BorderRadius.circular(12)),
                         child: const Text(
                           "Posisikan Seluruh Tubuh Anda di Dalam Frame",
                           textAlign: TextAlign.center,
@@ -110,17 +86,13 @@ class _CameraPreviewSection extends GetView<CamlatihanController> {
 
   Widget _buildCornerNode() {
     return Container(
-      width: 14, height: 14,
-      margin: const EdgeInsets.all(8),
-      decoration: const BoxDecoration(
-        color: Color(0xFF34C759),
-        shape: BoxShape.circle,
-      ),
+      width: 14, height: 14, margin: const EdgeInsets.all(8),
+      decoration: const BoxDecoration(color: Color(0xFF34C759), shape: BoxShape.circle),
     );
   }
 }
 
-class _TopHeaderOverlay extends StatelessWidget {
+class _TopHeaderOverlay extends GetView<CamlatihanController> {
   const _TopHeaderOverlay();
 
   @override
@@ -132,34 +104,24 @@ class _TopHeaderOverlay extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), shape: BoxShape.circle),
-            child: IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20),
-              onPressed: () => Get.back(),
-            ),
+            child: IconButton(icon: const Icon(Icons.close_rounded, color: Colors.white, size: 20), onPressed: () => Get.back()),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(color: Colors.black.withOpacity(0.5), borderRadius: BorderRadius.circular(20)),
-            child: const Text(
-              "Squats Tracking",
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-            ),
+            child: Obx(() => Text("${controller.currentExercise.value} Tracking", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14))),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: const Color(0xFF34C759).withOpacity(0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0xFF34C759).withOpacity(0.2), borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0xFF34C759).withOpacity(0.5)),
             ),
             child: Row(
               children: [
                 Container(width: 6, height: 6, decoration: const BoxDecoration(color: Color(0xFF34C759), shape: BoxShape.circle)),
                 const SizedBox(width: 6),
-                const Text(
-                  "AI ACTIVE",
-                  style: TextStyle(color: Color(0xFF34C759), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5),
-                ),
+                const Text("AI ACTIVE", style: TextStyle(color: Color(0xFF34C759), fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
               ],
             ),
           ),
@@ -177,12 +139,10 @@ class _RealtimeMetricsDashboard extends GetView<CamlatihanController> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        width: double.infinity, padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: const Color(0xFF18181B).withOpacity(0.85), // Style HUD semi transparan premium
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: const Color(0xFF27272A)),
+          color: const Color(0xFF18181B).withOpacity(0.85),
+          borderRadius: BorderRadius.circular(24), border: Border.all(color: const Color(0xFF27272A)),
         ),
         child: Column(
           children: [
@@ -204,11 +164,7 @@ class _RealtimeMetricsDashboard extends GetView<CamlatihanController> {
                     const SizedBox(height: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2E6930).withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: const Color(0xFF2E6930).withOpacity(0.4)),
-                      ),
+                      decoration: BoxDecoration(color: const Color(0xFF2E6930).withOpacity(0.15), borderRadius: BorderRadius.circular(10), border: Border.all(color: const Color(0xFF2E6930).withOpacity(0.4))),
                       child: Obx(() => Text("${controller.accuracy.value}%", style: const TextStyle(color: Color(0xFF34C759), fontWeight: FontWeight.w900, fontSize: 16))),
                     ),
                   ],
@@ -258,29 +214,21 @@ class _BottomActionControls extends GetView<CamlatihanController> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
-          // Tombol Balik Lensa Kamera HP
           _buildActionButton(Icons.flip_camera_ios_rounded, () => controller.toggleCamera()),
-
-          // Tombol Selesai Sesi
           SizedBox(
             width: 140, height: 52,
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)),
-                elevation: 0,
+                backgroundColor: Colors.redAccent, foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(26)), elevation: 0,
               ),
-              onPressed: () => Get.back(),
+              onPressed: () => controller.simpanHasilLatihan(), // Memanggil fungsi pindah halaman
               child: const Text("Selesai Sesi", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
             ),
           ),
-
-          // Tombol Suara Pemandu Audio
           Obx(() => _buildActionButton(
             controller.isMuted.value ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                () => controller.toggleMute(),
-            isActive: !controller.isMuted.value,
+                () => controller.toggleMute(), isActive: !controller.isMuted.value,
           )),
         ],
       ),
@@ -289,15 +237,8 @@ class _BottomActionControls extends GetView<CamlatihanController> {
 
   Widget _buildActionButton(IconData icon, VoidCallback onTap, {bool isActive = true}) {
     return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFF18181B),
-        shape: BoxShape.circle,
-        border: Border.all(color: isActive ? const Color(0xFF27272A) : Colors.redAccent.withOpacity(0.5)),
-      ),
-      child: IconButton(
-        icon: Icon(icon, color: isActive ? Colors.white : Colors.redAccent, size: 20),
-        onPressed: onTap,
-      ),
+      decoration: BoxDecoration(color: const Color(0xFF18181B), shape: BoxShape.circle, border: Border.all(color: isActive ? const Color(0xFF27272A) : Colors.redAccent.withOpacity(0.5))),
+      child: IconButton(icon: Icon(icon, color: isActive ? Colors.white : Colors.redAccent, size: 20), onPressed: onTap),
     );
   }
 }

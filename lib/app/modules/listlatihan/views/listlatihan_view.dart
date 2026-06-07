@@ -7,6 +7,11 @@ class ListlatihanView extends GetView<ListlatihanController> {
 
   @override
   Widget build(BuildContext context) {
+    // =========================================================
+    // KUNCI PERBAIKAN: PAKSA CEK TOKEN SETIAP HALAMAN DIBUKA
+    // =========================================================
+    controller.checkLoginStatus();
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAF8),
       body: Stack(
@@ -196,14 +201,14 @@ class _ExerciseListSection extends StatelessWidget {
       child: Column(
         children: [
           _ExerciseCard(
-            title: 'Squats',
+            title: 'Squat', // Ubah jadi "Squat" agar match dengan rumus Controller AI
             subtitle: 'Lower body strength & balance',
             imagePath: 'assets/training/squat.png',
             level: 'Beginner',
             duration: '10 mins',
             kcal: '45 kcal',
             isBeginner: true,
-            isLocked: !isAuth, // Jika belum auth, kunci otomatis
+            isLocked: !isAuth,
           ),
           _ExerciseCard(
             title: 'Lunges',
@@ -260,7 +265,7 @@ class _ExerciseCard extends GetView<ListlatihanController> {
   final String duration;
   final String kcal;
   final bool isBeginner;
-  final bool isLocked; // Properti baru pengontrol status gembok
+  final bool isLocked;
 
   const _ExerciseCard({
     required this.title,
@@ -278,10 +283,13 @@ class _ExerciseCard extends GetView<ListlatihanController> {
     return GestureDetector(
       onTap: () {
         if (isLocked) {
-          controller.showGuestWarning(); // Panggil pop-up jika terkunci
+          controller.showGuestWarning();
           return;
         }
-        Get.toNamed('/camlatihan');
+        // =========================================================
+        // PENTING: MENGIRIM NAMA OLAHRAGA KE HALAMAN KAMERA
+        // =========================================================
+        Get.toNamed('/camlatihan', arguments: {'exercise_name': title});
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 16),
@@ -299,7 +307,6 @@ class _ExerciseCard extends GetView<ListlatihanController> {
         ),
         child: Row(
           children: [
-            // Foto Latihan
             Container(
               width: 80,
               height: 80,
@@ -314,7 +321,6 @@ class _ExerciseCard extends GetView<ListlatihanController> {
                   width: 80,
                   height: 80,
                   fit: BoxFit.cover,
-                  // Menggelapkan gambar jika terkunci (Teaser Mode)
                   color: isLocked ? Colors.black.withOpacity(0.4) : null,
                   colorBlendMode: isLocked ? BlendMode.darken : null,
                   errorBuilder: (context, error, stackTrace) {
@@ -324,7 +330,6 @@ class _ExerciseCard extends GetView<ListlatihanController> {
               ),
             ),
             const SizedBox(width: 16),
-            // Konten Teks
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -375,7 +380,6 @@ class _ExerciseCard extends GetView<ListlatihanController> {
                 ],
               ),
             ),
-            // Tombol Aksi: Berubah jadi gembok abu-abu jika terkunci
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(

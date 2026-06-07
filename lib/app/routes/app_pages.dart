@@ -26,6 +26,8 @@ import '../modules/quesioner/bindings/quesioner_binding.dart';
 import '../modules/quesioner/views/quesioner_view.dart';
 import '../modules/register/bindings/register_binding.dart';
 import '../modules/register/views/register_view.dart';
+import '../modules/resumelatihan/bindings/resumelatihan_binding.dart';
+import '../modules/resumelatihan/views/resumelatihan_view.dart';
 import '../modules/setting/bindings/setting_binding.dart';
 import '../modules/setting/views/setting_view.dart';
 import '../modules/ubahpassword/bindings/ubahpassword_binding.dart';
@@ -120,6 +122,11 @@ class AppPages {
       name: _Paths.OTP,
       page: () => const OtpView(),
       binding: OtpBinding(),
+    ),
+    GetPage(
+      name: _Paths.RESUMELATIHAN,
+      page: () => const ResumelatihanView(),
+      binding: ResumelatihanBinding(),
     ),
   ];
 }

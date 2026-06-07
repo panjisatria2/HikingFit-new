@@ -1,10 +1,9 @@
 import 'dart:convert';
 import 'package:get/get.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../utils/api_endpoints.dart';
+import '../../../utils/api_service.dart'; // Import Kurir Cerdas
 
 class SettingController extends GetxController {
   final RxString fullName = 'Pendaki'.obs;
@@ -21,6 +20,7 @@ class SettingController extends GetxController {
 
   final RxBool isLoading = true.obs;
 
+  // Secure storage disisakan HANYA untuk fitur Logout (hapus memori)
   final FlutterSecureStorage secureStorage = const FlutterSecureStorage(
       aOptions: AndroidOptions(encryptedSharedPreferences: true)
   );
@@ -44,24 +44,15 @@ class SettingController extends GetxController {
   }
 
   // =========================================================
-  // UPDATE: AMBIL TOKEN FRESH DARI FIREBASE
+  // MENGGUNAKAN API SERVICE
   // =========================================================
   Future<void> loadProfileData() async {
     try {
       isLoading.value = true;
-      User? user = FirebaseAuth.instance.currentUser;
 
-      if (user != null) {
-        // Ambil token langsung dari mesin Firebase Auth
-        String? token = await user.getIdToken();
-
-        final response = await http.get(
-            Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $token'
-            }
-        );
+      if (isLoggedIn.value) {
+        // Cukup panggil ApiService
+        final response = await ApiService.get('/api/auth/profile');
 
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
@@ -102,7 +93,6 @@ class SettingController extends GetxController {
 
   Future<void> handleLogout() async {
     await FirebaseAuth.instance.signOut();
-    // Hapus juga sisa token lama di memori lokal jika masih ada
     await secureStorage.delete(key: 'jwt_token');
     Get.offAllNamed('/login');
   }

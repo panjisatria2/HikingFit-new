@@ -19,6 +19,7 @@ abstract class Routes {
   static const QUESIONER = _Paths.QUESIONER;
   static const CAMLATIHAN = _Paths.CAMLATIHAN;
   static const OTP = _Paths.OTP;
+  static const RESUMELATIHAN = _Paths.RESUMELATIHAN;
 }
 
 abstract class _Paths {
@@ -39,4 +40,5 @@ abstract class _Paths {
   static const QUESIONER = '/quesioner';
   static const CAMLATIHAN = '/camlatihan';
   static const OTP = '/otp';
+  static const RESUMELATIHAN = '/resumelatihan';
 }

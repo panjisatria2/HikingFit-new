@@ -2,10 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_sign_in/google_sign_in.dart';
-import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../utils/api_endpoints.dart';
+import '../../../utils/api_service.dart'; // Import kurir cerdas kita
 
 class LoginController extends GetxController {
   final emailController = TextEditingController();
@@ -13,7 +11,6 @@ class LoginController extends GetxController {
 
   final GoogleSignIn _googleSignIn = GoogleSignIn();
   final RxBool isLoading = false.obs;
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
 
   @override
   void onClose() {
@@ -38,15 +35,9 @@ class LoginController extends GetxController {
         password: passwordController.text.trim(),
       );
 
-      String? token = await userCredential.user?.getIdToken();
-
-      if (token != null) {
-        await secureStorage.write(key: 'jwt_token', value: token);
-
-        final response = await http.get(
-          Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'),
-          headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer $token'},
-        );
+      if (userCredential.user != null) {
+        // MENGGUNAKAN API SERVICE BARU (Sangat ringkas!)
+        final response = await ApiService.get('/api/auth/profile');
 
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
@@ -86,21 +77,19 @@ class LoginController extends GetxController {
     try {
       isLoading.value = true;
 
-      // 1. JURUS PAKSA LUPA: Putuskan sesi lama agar selalu milih akun Google
+      // Paksa lupa agar selalu memunculkan pilihan akun
       if (await _googleSignIn.isSignedIn()) {
         await _googleSignIn.disconnect();
       }
       await _googleSignIn.signOut();
 
-      // 2. Munculkan dialog pilihan akun
       final googleUser = await _googleSignIn.signIn();
 
       if (googleUser == null) {
         isLoading.value = false;
-        return; // Dibatalkan oleh user
+        return; // Batal login
       }
 
-      // 3. Masukkan ke Firebase
       final googleAuth = await googleUser.authentication;
       final AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
@@ -111,19 +100,9 @@ class LoginController extends GetxController {
       final User? user = userCredential.user;
 
       if (user != null) {
-        String? token = await user.getIdToken();
-        await secureStorage.write(key: 'jwt_token', value: token);
-
-        // 4. Sinkronisasi ke Backend Express
-        final String urlTarget = '${ApiEndpoints.baseUrl}/api/auth/google-login';
-
-        final response = await http.post(
-          Uri.parse(urlTarget),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token' // Wajib sama persis formatnya dengan backend
-          },
-        );
+        // MENGGUNAKAN API SERVICE BARU UNTUK SINKRONISASI
+        // Perhatikan betapa pendeknya kode ini sekarang!
+        final response = await ApiService.post('/api/auth/google-login', {});
 
         if (response.statusCode == 200) {
           final data = jsonDecode(response.body);
@@ -136,23 +115,13 @@ class LoginController extends GetxController {
             Get.offAllNamed('/main');
           }
         } else {
-          // --- DETEKTIF ERROR BACKEND ---
-          // Membaca pesan asli dari backend (dari file authRoutes.js Abang)
           String errorAlasan = 'Kode: ${response.statusCode}';
           try {
             final dataErr = jsonDecode(response.body);
-            if (dataErr['message'] != null) {
-              errorAlasan = dataErr['message'];
-            }
+            if (dataErr['message'] != null) errorAlasan = dataErr['message'];
           } catch (_) {}
 
-          Get.snackbar(
-            'Ditolak Backend (${response.statusCode})',
-            errorAlasan,
-            backgroundColor: Colors.red,
-            colorText: Colors.white,
-            duration: const Duration(seconds: 5), // Ditahan 5 detik agar gampang dibaca
-          );
+          Get.snackbar('Ditolak Backend', errorAlasan, backgroundColor: Colors.red, colorText: Colors.white, duration: const Duration(seconds: 5));
         }
       }
     } catch (e) {

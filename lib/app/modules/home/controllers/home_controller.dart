@@ -1,19 +1,12 @@
 import 'dart:convert';
 import 'package:get/get.dart';
-import 'package:http/http.dart' as http;
 import 'package:firebase_auth/firebase_auth.dart';
-// secure_storage sudah tidak terlalu dibutuhkan untuk token, tapi dibiarkan jika ada keperluan lain
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import '../../../utils/api_endpoints.dart';
+import '../../../utils/api_service.dart'; // Import Kurir Cerdas
 
 class HomeController extends GetxController {
   final RxString userName = 'Pendaki'.obs;
   final RxString profileImageUrl = ''.obs;
   final RxBool isLoggedIn = false.obs;
-
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage(
-    aOptions: AndroidOptions(encryptedSharedPreferences: true),
-  );
 
   @override
   void onInit() {
@@ -32,23 +25,13 @@ class HomeController extends GetxController {
   }
 
   // =========================================================
-  // UPDATE: AMBIL TOKEN FRESH DARI FIREBASE
+  // MENGGUNAKAN API SERVICE (SANGAT RINGKAS)
   // =========================================================
   Future<void> loadProfileData() async {
     try {
-      User? user = FirebaseAuth.instance.currentUser;
-
-      if (user != null) {
-        // Baris sakti: Firebase akan otomatis memberikan token baru jika token lama sudah expired (lewat 1 jam)
-        String? token = await user.getIdToken();
-
-        final response = await http.get(
-          Uri.parse('${ApiEndpoints.baseUrl}/api/auth/profile'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token', // Kirim token fresh ke Vercel
-          },
-        );
+      if (isLoggedIn.value) {
+        // Cukup panggil 1 baris ini, ApiService yang urus token fresh-nya!
+        final response = await ApiService.get('/api/auth/profile');
 
         if (response.statusCode == 200) {
           final jsonResponse = jsonDecode(response.body);
