@@ -20,7 +20,6 @@ class ResumelatihanController extends GetxController {
   }
 
   void kembaliKeBeranda() {
-    // Sesuaikan '/home' dengan rute dashboard utama Abang
-    Get.offAllNamed('/home');
+    Get.offAllNamed('/main');
   }
 }

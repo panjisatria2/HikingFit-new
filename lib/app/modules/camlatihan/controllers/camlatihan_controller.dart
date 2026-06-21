@@ -1,17 +1,28 @@
 import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_mlkit_pose_detection/google_mlkit_pose_detection.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class CamlatihanController extends GetxController {
   CameraController? cameraController;
   final RxBool isCameraInitialized = false.obs;
-  final RxInt selectedCameraIndex = 1.obs; // Kamera Depan
+  final RxInt selectedCameraIndex = 1.obs;
 
-  // --- METRICS DATA LATIHAN ---
+  // --- DATA SKELETON (UNTUK DILUKIS DI VIEW) ---
+  final Rx<Pose?> currentPose = Rx<Pose?>(null);
+  Size cameraImageSize = Size.zero;
+  bool isFrontCamera = true;
+
+  // --- STATE MULAI/STOP LATIHAN ---
+  final RxBool isPlaying = false.obs; // Default false (Belum Mulai)
+
+  // --- METRICS ---
   final RxString currentExercise = "Squat".obs;
   final RxInt repsCount = 0.obs;
   final RxInt accuracy = 0.obs;
@@ -19,26 +30,28 @@ class CamlatihanController extends GetxController {
   final RxDouble calories = 0.0.obs;
   final RxBool isMuted = false.obs;
 
-  // --- MESIN AI & TIMER ---
   final PoseDetector _poseDetector = PoseDetector(options: PoseDetectorOptions());
   bool _isProcessingFrame = false;
   bool _isDown = false;
-
   Timer? _timer;
   int _secondsElapsed = 0;
 
   @override
   void onInit() {
     super.onInit();
-    if (Get.arguments != null) {
-      currentExercise.value = Get.arguments['exercise_name'] ?? "Squat";
-    }
+    if (Get.arguments != null) currentExercise.value = Get.arguments['exercise_name'] ?? "Squat";
     initCamera(selectedCameraIndex.value);
-    _startTimer(); // Nyalakan stopwatch
+    // Timer TIDAK LAGI dijalan di onInit.
   }
 
-  // --- LOGIKA WAKTU (TIMER) ---
+  // Fungsi dipanggil saat tombol "Mulai" ditekan
+  void mulaiLatihan() {
+    isPlaying.value = true;
+    _startTimer();
+  }
+
   void _startTimer() {
+    _timer?.cancel();
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       _secondsElapsed++;
       int minutes = _secondsElapsed ~/ 60;
@@ -51,11 +64,13 @@ class CamlatihanController extends GetxController {
     try {
       isCameraInitialized.value = false;
       final cameras = await availableCameras();
-
       if (cameras.isNotEmpty) {
+        isFrontCamera = cameraIndex == 1;
         cameraController = CameraController(
-          cameras[cameraIndex], ResolutionPreset.high, enableAudio: false,
-          imageFormatGroup: ImageFormatGroup.yuv420,
+          cameras[cameraIndex],
+          ResolutionPreset.high,
+          enableAudio: false,
+          imageFormatGroup: Platform.isAndroid ? ImageFormatGroup.nv21 : ImageFormatGroup.bgra8888,
         );
 
         await cameraController!.initialize();
@@ -67,42 +82,44 @@ class CamlatihanController extends GetxController {
             _processCameraImage(image, cameras[cameraIndex]);
           }
         });
-      } else {
-        _showErrorSnackbar("Kamera tidak ditemukan.");
       }
     } catch (e) {
-      _showErrorSnackbar("Gagal mengakses kamera: $e");
+      debugPrint("Error Kamera: $e");
     }
   }
 
   Future<void> _processCameraImage(CameraImage image, CameraDescription camera) async {
     try {
       final WriteBuffer allBytes = WriteBuffer();
-      for (final Plane plane in image.planes) {
-        allBytes.putUint8List(plane.bytes);
-      }
+      for (final Plane plane in image.planes) { allBytes.putUint8List(plane.bytes); }
       final bytes = allBytes.done().buffer.asUint8List();
 
       final Size imageSize = Size(image.width.toDouble(), image.height.toDouble());
       final imageRotation = InputImageRotationValue.fromRawValue(camera.sensorOrientation) ?? InputImageRotation.rotation0deg;
       final inputImageFormat = InputImageFormatValue.fromRawValue(image.format.raw) ?? InputImageFormat.nv21;
 
-      // =================================================================
-      // PERBAIKAN: FORMAT PENULISAN UNTUK ML KIT VERSI TERBARU
-      // =================================================================
       final inputImage = InputImage.fromBytes(
         bytes: bytes,
         metadata: InputImageMetadata(
           size: imageSize,
           rotation: imageRotation,
           format: inputImageFormat,
-          bytesPerRow: image.planes.first.bytesPerRow, // Cukup ambil dari plane pertama
+          bytesPerRow: image.planes.first.bytesPerRow,
         ),
       );
 
       final List<Pose> poses = await _poseDetector.processImage(inputImage);
       if (poses.isNotEmpty) {
+        bool isPortrait = camera.sensorOrientation == 90 || camera.sensorOrientation == 270;
+        cameraImageSize = isPortrait ? Size(image.height.toDouble(), image.width.toDouble()) : imageSize;
+
+        currentPose.value = poses.first;
+        currentPose.refresh();
+
         _routerGerakan(poses.first);
+      } else {
+        currentPose.value = null;
+        currentPose.refresh();
       }
     } catch (e) {
       debugPrint("Error AI: $e");
@@ -112,13 +129,9 @@ class CamlatihanController extends GetxController {
   }
 
   void _routerGerakan(Pose pose) {
-    switch (currentExercise.value) {
-      case "Squat":
-      case "Squats": _evaluateSquat(pose); break;
-      case "Lunges": _evaluateLunges(pose); break;
-      case "Plank": _evaluatePlank(pose); break;
-      default: break;
-    }
+    if (currentExercise.value.contains("Squat")) _evaluateSquat(pose);
+    else if (currentExercise.value.contains("Lunges")) _evaluateLunges(pose);
+    else if (currentExercise.value.contains("Plank")) _evaluatePlank(pose);
   }
 
   void _evaluateSquat(Pose pose) {
@@ -131,7 +144,12 @@ class CamlatihanController extends GetxController {
       if (angle < 100.0) {
         _isDown = true; accuracy.value = 95;
       } else if (angle > 160.0 && _isDown) {
-        repsCount.value++; calories.value += 0.3; _isDown = false; accuracy.value = 100;
+        _isDown = false; accuracy.value = 100;
+
+        // HANYA MENGHITUNG REP JIKA SUDAH DITEKAN MULAI
+        if (isPlaying.value) {
+          repsCount.value++; calories.value += 0.3;
+        }
       } else if (angle > 100.0 && angle < 140.0 && !_isDown) {
         accuracy.value = 45;
       }
@@ -148,7 +166,8 @@ class CamlatihanController extends GetxController {
       if (angle < 95.0) {
         _isDown = true; accuracy.value = 90;
       } else if (angle > 150.0 && _isDown) {
-        repsCount.value++; calories.value += 0.25; _isDown = false; accuracy.value = 100;
+        _isDown = false; accuracy.value = 100;
+        if (isPlaying.value) { repsCount.value++; calories.value += 0.25; }
       }
     }
   }
@@ -161,7 +180,8 @@ class CamlatihanController extends GetxController {
     if (shoulder != null && hip != null && ankle != null && shoulder.likelihood > 0.5) {
       double bodyAngle = _calculateAngle(shoulder, hip, ankle);
       if (bodyAngle > 160.0) {
-        accuracy.value = 100; calories.value += 0.05; // Kalori plank naik per frame
+        accuracy.value = 100;
+        if (isPlaying.value) calories.value += 0.05;
       } else if (bodyAngle < 150.0) {
         accuracy.value = 40;
       }
@@ -175,20 +195,33 @@ class CamlatihanController extends GetxController {
     return angle;
   }
 
-  // =================================================================
-  // FUNGSI SELESAI & PINDAH KE HALAMAN RESUME
-  // =================================================================
+  // Fungsi dipanggil saat tombol "Stop / Selesai Sesi" ditekan
   Future<void> simpanHasilLatihan() async {
-    if (repsCount.value == 0 && currentExercise.value != "Plank") {
-      Get.back(); return;
-    }
+    isPlaying.value = false;
 
-    // Matikan stream kamera & timer agar tidak bocor di RAM
+    Get.snackbar('Menyimpan...', 'Merekam hasil latihan ke Cloud...', showProgressIndicator: true, snackPosition: SnackPosition.TOP, backgroundColor: Colors.white);
+
     await cameraController?.stopImageStream();
     _poseDetector.close();
     _timer?.cancel();
 
-    // Lempar data ke halaman Resume
+    try {
+      User? currentUser = FirebaseAuth.instance.currentUser;
+      if (currentUser != null) {
+        await FirebaseFirestore.instance.collection('training_history').add({
+          'uid': currentUser.uid,
+          'exercise_name': currentExercise.value,
+          'total_reps': repsCount.value,
+          'accuracy': accuracy.value,
+          'duration': duration.value,
+          'calories': calories.value,
+          'created_at': FieldValue.serverTimestamp(),
+        });
+      }
+    } catch (e) {
+      debugPrint("Gagal simpan ke Firebase: $e");
+    }
+
     Get.offNamed('/resumelatihan', arguments: {
       'exercise_name': currentExercise.value,
       'total_reps': repsCount.value,
@@ -198,7 +231,7 @@ class CamlatihanController extends GetxController {
     });
   }
 
-  Future<void> toggleCamera() async {
+  void toggleCamera() async {
     final cameras = await availableCameras();
     if (cameras.length < 2) return;
     selectedCameraIndex.value = selectedCameraIndex.value == 0 ? 1 : 0;
@@ -208,10 +241,6 @@ class CamlatihanController extends GetxController {
   }
 
   void toggleMute() { isMuted.value = !isMuted.value; }
-
-  void _showErrorSnackbar(String message) {
-    Get.snackbar('Error', message, backgroundColor: Colors.redAccent, colorText: Colors.white);
-  }
 
   @override
   void onClose() {

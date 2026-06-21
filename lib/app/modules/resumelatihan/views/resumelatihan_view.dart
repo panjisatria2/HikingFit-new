@@ -19,10 +19,7 @@ class ResumelatihanView extends GetView<ResumelatihanController> {
               const Spacer(),
               Container(
                 padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9), shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: const Color(0xFF2E6930).withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10))],
-                ),
+                decoration: BoxDecoration(color: const Color(0xFFE8F5E9), shape: BoxShape.circle, boxShadow: [BoxShadow(color: const Color(0xFF2E6930).withOpacity(0.2), blurRadius: 30, offset: const Offset(0, 10))]),
                 child: const Icon(Icons.emoji_events_rounded, color: Color(0xFF2E6930), size: 80),
               ),
               const SizedBox(height: 32),
@@ -32,10 +29,7 @@ class ResumelatihanView extends GetView<ResumelatihanController> {
               const SizedBox(height: 40),
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white, borderRadius: BorderRadius.circular(24),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))],
-                ),
+                decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.04), blurRadius: 20, offset: const Offset(0, 10))]),
                 child: Obx(() => Column(
                   children: [
                     Row(
@@ -60,11 +54,8 @@ class ResumelatihanView extends GetView<ResumelatihanController> {
               SizedBox(
                 width: double.infinity, height: 56,
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2E6930), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0,
-                  ),
-                  onPressed: () => controller.kembaliKeBeranda(),
-                  child: const Text("Kembali ke Beranda", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF2E6930), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)), elevation: 0),
+                  onPressed: () => controller.kembaliKeBeranda(), child: const Text("Kembali ke Beranda", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                 ),
               ),
             ],
@@ -78,10 +69,7 @@ class ResumelatihanView extends GetView<ResumelatihanController> {
     return Column(
       children: [
         Icon(icon, color: isOrange ? Colors.orange.shade600 : const Color(0xFF2E6930), size: 28),
-        const SizedBox(height: 8),
-        Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)),
-        const SizedBox(height: 4),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
+        const SizedBox(height: 8), Text(value, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black87)), const SizedBox(height: 4), Text(label, style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500)),
       ],
     );
   }

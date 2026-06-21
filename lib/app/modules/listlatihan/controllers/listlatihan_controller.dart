@@ -1,12 +1,9 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'auth_controller.dart';
 
 class ListlatihanController extends GetxController {
-  final RxBool isLoggedIn = false.obs;
-  final FlutterSecureStorage secureStorage = const FlutterSecureStorage();
+  final AuthController auth = Get.put(AuthController());
 
   @override
   void onInit() {
@@ -14,9 +11,16 @@ class ListlatihanController extends GetxController {
     checkLoginStatus();
   }
 
-  Future<void> checkLoginStatus() async {
-    final token = await secureStorage.read(key: 'jwt_token');
-    isLoggedIn.value = token != null && token.isNotEmpty;
+  void checkLoginStatus() {
+    auth.checkAuth();
+  }
+
+  void mulaiLatihan(String namaOlahraga) {
+    if (auth.isLoggedIn.value) {
+      Get.toNamed('/camlatihan', arguments: {'exercise_name': namaOlahraga});
+    } else {
+      showGuestWarning();
+    }
   }
 
   void showGuestWarning() {
